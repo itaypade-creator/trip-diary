@@ -1,0 +1,1540 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, user-scalable=no">
+<meta name="theme-color" content="#0a2540">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Trip Diary">
+<title>Trip Diary</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Rubik:ital,wght@0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,400;1,500;1,600;1,700;1,800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #eef7fa;
+    --bg-tint: #dff1f8;
+    --card: #ffffff;
+    --card-soft: #f7fcfe;
+    --ink: #0a2540;
+    --ink-soft: #1e3a5f;
+    --muted: #64748b;
+    --line: #cfe6ef;
+    --line-strong: #a7d3e2;
+    --primary: #0284c7;
+    --primary-deep: #075985;
+    --cyan: #06b6d4;
+    --turquoise: #14b8a6;
+    --turquoise-light: #5eead4;
+    --sky: #38bdf8;
+    --gradient: linear-gradient(135deg, #22d3ee 0%, #14b8a6 100%);
+    --gradient-deep: linear-gradient(135deg, #0284c7 0%, #0891b2 50%, #0d9488 100%);
+    --red-record: #f43f5e;
+    --shadow-sm: 0 1px 2px rgba(2, 132, 199, 0.05), 0 2px 8px -2px rgba(2, 132, 199, 0.08);
+    --shadow: 0 1px 2px rgba(2, 132, 199, 0.06), 0 10px 28px -10px rgba(2, 132, 199, 0.18);
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+  html, body { height: 100%; overscroll-behavior: none; }
+  body {
+    font-family: 'Rubik', sans-serif;
+    color: var(--ink);
+    background: var(--bg);
+    -webkit-font-smoothing: antialiased;
+    background-image:
+      radial-gradient(ellipse 80% 50% at 15% 0%, rgba(34, 211, 238, 0.20) 0%, transparent 60%),
+      radial-gradient(ellipse 70% 50% at 90% 25%, rgba(20, 184, 166, 0.18) 0%, transparent 60%),
+      radial-gradient(ellipse 80% 60% at 50% 100%, rgba(56, 189, 248, 0.16) 0%, transparent 60%);
+    background-attachment: fixed;
+    min-height: 100vh;
+    min-height: 100dvh;
+    padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
+  }
+  h1, h2, h3 { letter-spacing: -0.02em; }
+  .mono { font-family: 'JetBrains Mono', monospace; font-feature-settings: "tnum" 1; }
+
+  /* ============ SPLASH ============ */
+  .splash {
+    position: fixed;
+    inset: 0;
+    z-index: 1000;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 22px;
+    background: var(--bg);
+    background-image:
+      radial-gradient(ellipse 80% 50% at 15% 0%, rgba(34, 211, 238, 0.22) 0%, transparent 60%),
+      radial-gradient(ellipse 70% 50% at 90% 25%, rgba(20, 184, 166, 0.20) 0%, transparent 60%),
+      radial-gradient(ellipse 80% 60% at 50% 100%, rgba(56, 189, 248, 0.18) 0%, transparent 60%);
+    transition: opacity 0.6s ease, transform 0.6s ease;
+  }
+  .splash.hidden { opacity: 0; pointer-events: none; transform: scale(1.05); }
+  .splash-icon {
+    width: 140px; height: 140px;
+    animation: splash-in 0.9s cubic-bezier(0.2, 0.8, 0.2, 1);
+    filter: drop-shadow(0 22px 50px rgba(8, 145, 178, 0.45)) drop-shadow(0 10px 18px rgba(2, 132, 199, 0.35));
+  }
+  .splash-name {
+    font-size: 32px;
+    font-weight: 700;
+    color: var(--ink);
+    letter-spacing: -0.02em;
+    animation: splash-text-in 0.9s 0.15s cubic-bezier(0.2, 0.8, 0.2, 1) backwards;
+    display: flex;
+    align-items: baseline;
+    gap: 6px;
+  }
+  .splash-name .diary-word { color: var(--turquoise); font-style: italic; font-weight: 600; }
+  .splash-tagline {
+    margin-top: 2px;
+    color: var(--muted);
+    font-size: 13px;
+    font-weight: 500;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    animation: splash-text-in 0.9s 0.3s cubic-bezier(0.2, 0.8, 0.2, 1) backwards;
+  }
+  @keyframes splash-in {
+    from { opacity: 0; transform: scale(0.7); }
+    to { opacity: 1; transform: scale(1); }
+  }
+  @keyframes splash-text-in {
+    from { opacity: 0; transform: translateY(8px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  /* ============ LOGO (HEADER) ============ */
+  .logo {
+    position: relative;
+    display: inline-flex;
+    align-items: baseline;
+    font-family: 'Rubik', sans-serif;
+    font-size: 23px;
+    font-weight: 700;
+    letter-spacing: -0.025em;
+    padding-top: 10px;
+    gap: 4px;
+  }
+  .logo-trip { color: var(--ink); }
+  .logo-diary { color: var(--turquoise); font-style: italic; font-weight: 600; }
+  .logo-plane {
+    position: absolute;
+    top: -2px;
+    inset-inline-start: 16%;
+    width: 70%;
+    height: 14px;
+    pointer-events: none;
+    color: var(--turquoise);
+  }
+  [dir="rtl"] .logo-plane { transform: scaleX(-1); }
+
+  #app {
+    max-width: 520px;
+    margin: 0 auto;
+    min-height: 100dvh;
+    display: flex;
+    flex-direction: column;
+  }
+
+  /* ============ HEADER ============ */
+  header {
+    padding: 16px 22px 14px;
+    background: rgba(238, 247, 250, 0.78);
+    position: sticky;
+    top: 0;
+    z-index: 10;
+    backdrop-filter: blur(20px) saturate(160%);
+    -webkit-backdrop-filter: blur(20px) saturate(160%);
+    border-bottom: 1px solid rgba(207, 230, 239, 0.6);
+  }
+  .header-top {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 8px;
+    gap: 10px;
+  }
+  .header-actions { display: flex; gap: 6px; flex-shrink: 0; }
+  .icon-btn {
+    background: rgba(255, 255, 255, 0.7);
+    border: 1px solid var(--line);
+    border-radius: 100px;
+    padding: 8px 14px;
+    font-family: inherit;
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--ink-soft);
+    cursor: pointer;
+    transition: all 0.2s ease;
+    backdrop-filter: blur(8px);
+    white-space: nowrap;
+  }
+  .icon-btn:active {
+    background: var(--ink);
+    color: white;
+    border-color: var(--ink);
+    transform: scale(0.97);
+  }
+  .lang-btn { min-width: 44px; font-weight: 700; }
+
+  .trip-line {
+    display: flex;
+    align-items: baseline;
+    gap: 8px;
+    flex-wrap: wrap;
+    font-size: 13px;
+    color: var(--muted);
+  }
+  .trip-name { font-weight: 700; color: var(--ink-soft); font-size: 15px; }
+  .trip-sep { color: var(--line-strong); }
+
+  /* ============ RECORDER ============ */
+  .recorder { padding: 22px 22px 30px; text-align: center; }
+
+  .location-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 9px;
+    padding: 8px 16px;
+    background: rgba(255, 255, 255, 0.7);
+    border: 1px solid var(--line);
+    border-radius: 100px;
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--ink-soft);
+    margin-bottom: 32px;
+    box-shadow: var(--shadow-sm);
+    max-width: 90%;
+    backdrop-filter: blur(8px);
+  }
+  .location-text { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .location-dot {
+    width: 8px; height: 8px;
+    border-radius: 50%;
+    background: var(--turquoise);
+    flex-shrink: 0;
+    position: relative;
+  }
+  .location-dot::after {
+    content: "";
+    position: absolute;
+    inset: -3px;
+    border-radius: 50%;
+    border: 1.5px solid var(--turquoise);
+    opacity: 0.4;
+    animation: pulse 2s ease-out infinite;
+  }
+  @keyframes pulse {
+    0% { transform: scale(0.8); opacity: 0.6; }
+    100% { transform: scale(2.4); opacity: 0; }
+  }
+  .location-loading .location-dot { background: var(--muted); }
+  .location-loading .location-dot::after { border-color: var(--muted); }
+
+  .record-btn {
+    width: 138px; height: 138px;
+    border-radius: 50%;
+    border: none;
+    background: var(--gradient);
+    color: white;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto;
+    position: relative;
+    transition: transform 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+    box-shadow:
+      0 14px 32px -8px rgba(20, 184, 166, 0.55),
+      0 4px 12px -2px rgba(6, 182, 212, 0.35),
+      inset 0 -4px 0 rgba(0, 30, 40, 0.18),
+      inset 0 2px 0 rgba(255, 255, 255, 0.25);
+  }
+  .record-btn:active { transform: scale(0.94); }
+  .record-btn .mic-icon { width: 42px; height: 42px; fill: currentColor; }
+  .record-btn::before {
+    content: "";
+    position: absolute;
+    inset: -12px;
+    border: 1.5px dashed var(--line-strong);
+    border-radius: 50%;
+    pointer-events: none;
+  }
+  .record-btn.recording {
+    background: linear-gradient(135deg, #f43f5e 0%, #e11d48 100%);
+    animation: recording-pulse 1.6s ease-in-out infinite;
+  }
+  @keyframes recording-pulse {
+    0%, 100% {
+      box-shadow:
+        0 14px 32px -8px rgba(244, 63, 94, 0.55),
+        inset 0 -4px 0 rgba(0,0,0,0.2),
+        inset 0 2px 0 rgba(255,255,255,0.2),
+        0 0 0 0 rgba(244, 63, 94, 0.45);
+    }
+    50% {
+      box-shadow:
+        0 14px 32px -8px rgba(244, 63, 94, 0.55),
+        inset 0 -4px 0 rgba(0,0,0,0.2),
+        inset 0 2px 0 rgba(255,255,255,0.2),
+        0 0 0 20px rgba(244, 63, 94, 0);
+    }
+  }
+  .stop-icon { width: 30px; height: 30px; background: currentColor; border-radius: 6px; }
+
+  .record-label {
+    margin-top: 20px;
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--muted);
+    letter-spacing: 0.01em;
+  }
+  .timer {
+    margin-top: 4px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 16px;
+    color: var(--turquoise);
+    font-weight: 500;
+    height: 22px;
+  }
+
+  .live-transcript {
+    margin: 18px auto 0;
+    max-width: 94%;
+    padding: 16px 18px;
+    background: var(--card);
+    border-inline-start: 3px solid var(--turquoise);
+    border-radius: 14px;
+    font-size: 15px;
+    line-height: 1.75;
+    color: var(--ink-soft);
+    min-height: 52px;
+    box-shadow: var(--shadow-sm);
+  }
+  [dir="ltr"] .live-transcript { text-align: left; }
+  [dir="rtl"] .live-transcript { text-align: right; }
+  .live-transcript.empty { color: var(--muted); font-style: italic; }
+  .live-transcript .interim { color: var(--muted); }
+
+  /* ============ FEED ============ */
+  .feed { flex: 1; padding: 0 22px 110px; }
+  .feed-header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 24px 0 18px;
+    border-top: 1px solid var(--line);
+    margin-top: 4px;
+  }
+  .feed-header h2 {
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.22em;
+    text-transform: uppercase;
+    color: var(--muted);
+  }
+  .feed-header .count {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: white;
+    background: var(--gradient);
+    padding: 3px 10px;
+    border-radius: 100px;
+    font-weight: 600;
+  }
+
+  .day-group { margin-bottom: 28px; }
+  .day-header {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    margin-bottom: 14px;
+    padding: 12px 14px;
+    background: var(--card);
+    border: 1px solid var(--line);
+    border-radius: 16px;
+    box-shadow: var(--shadow-sm);
+  }
+  .day-stamp {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    width: 56px; height: 56px;
+    border-radius: 16px;
+    background: var(--gradient);
+    color: white;
+    flex-shrink: 0;
+    box-shadow: 0 6px 14px -4px rgba(20, 184, 166, 0.45);
+  }
+  .day-stamp .num { font-weight: 800; font-size: 22px; line-height: 1; letter-spacing: -0.02em; }
+  .day-stamp .label {
+    font-size: 9px;
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    margin-top: 2px;
+    opacity: 0.9;
+    font-weight: 600;
+  }
+  .day-meta { flex: 1; min-width: 0; }
+  .day-date {
+    font-weight: 700;
+    font-size: 16px;
+    color: var(--ink);
+    line-height: 1.25;
+    letter-spacing: -0.01em;
+  }
+  .day-location { font-size: 13px; color: var(--muted); margin-top: 4px; font-weight: 500; }
+
+  .entry {
+    padding: 14px 16px;
+    background: var(--card);
+    border: 1px solid var(--line);
+    border-inline-start: 3px solid var(--cyan);
+    border-radius: 14px;
+    margin-bottom: 10px;
+    margin-inline-start: 18px;
+    box-shadow: var(--shadow-sm);
+    cursor: pointer;
+    animation: entry-in 0.4s cubic-bezier(0.2, 0.8, 0.2, 1);
+  }
+  .entry:active { transform: scale(0.99); }
+  @keyframes entry-in {
+    from { opacity: 0; transform: translateY(8px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+  .entry-head {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 8px;
+    gap: 10px;
+  }
+  .entry-time {
+    font-family: 'JetBrains Mono', monospace;
+    color: var(--turquoise);
+    font-weight: 600;
+    font-size: 12px;
+  }
+  .entry-loc {
+    color: var(--muted);
+    font-size: 11px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    max-width: 60%;
+    font-weight: 500;
+  }
+  .entry-text {
+    font-size: 15px;
+    line-height: 1.75;
+    color: var(--ink-soft);
+    white-space: pre-wrap;
+    word-break: break-word;
+  }
+  .entry-actions {
+    margin-top: 12px;
+    padding-top: 10px;
+    border-top: 1px solid var(--line);
+    display: none;
+    gap: 14px;
+    font-size: 12px;
+  }
+  .entry.open .entry-actions { display: flex; }
+  .entry-action {
+    background: none;
+    border: none;
+    color: var(--muted);
+    cursor: pointer;
+    font-family: inherit;
+    font-size: 12px;
+    font-weight: 600;
+    padding: 4px 8px;
+    border-radius: 6px;
+  }
+  .entry-action:active { background: var(--bg-tint); color: var(--primary); }
+  .entry-action.danger:active { background: rgba(244, 63, 94, 0.1); color: var(--red-record); }
+
+  /* ============ EMPTY ============ */
+  .empty-state { text-align: center; padding: 50px 30px 30px; color: var(--muted); }
+  .empty-state-icon {
+    width: 60px; height: 60px;
+    margin: 0 auto 18px;
+    border-radius: 18px;
+    background: var(--gradient);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    box-shadow: 0 10px 24px -6px rgba(20, 184, 166, 0.5);
+  }
+  .empty-state-icon svg { width: 30px; height: 30px; }
+  .empty-state h3 {
+    font-size: 21px;
+    color: var(--ink);
+    margin-bottom: 10px;
+    font-weight: 700;
+    letter-spacing: -0.02em;
+  }
+  .empty-state p { font-size: 14px; line-height: 1.65; max-width: 280px; margin: 0 auto; }
+
+  /* ============ MODAL ============ */
+  .modal-backdrop {
+    position: fixed;
+    inset: 0;
+    background: rgba(10, 37, 64, 0.55);
+    backdrop-filter: blur(6px);
+    -webkit-backdrop-filter: blur(6px);
+    z-index: 100;
+    display: none;
+    align-items: flex-end;
+    justify-content: center;
+    animation: backdrop-in 0.2s;
+  }
+  @keyframes backdrop-in { from { opacity: 0; } to { opacity: 1; } }
+  .modal-backdrop.open { display: flex; }
+  .modal {
+    background: var(--bg);
+    width: 100%;
+    max-width: 520px;
+    border-radius: 24px 24px 0 0;
+    padding: 22px 22px 32px;
+    padding-bottom: calc(32px + env(safe-area-inset-bottom));
+    max-height: 86vh;
+    overflow-y: auto;
+    animation: modal-in 0.32s cubic-bezier(0.2, 0.8, 0.2, 1);
+    background-image:
+      radial-gradient(ellipse at 0% 0%, rgba(34, 211, 238, 0.15) 0%, transparent 50%),
+      radial-gradient(ellipse at 100% 100%, rgba(20, 184, 166, 0.12) 0%, transparent 50%);
+  }
+  @keyframes modal-in { from { transform: translateY(100%); } to { transform: translateY(0); } }
+  .modal-handle {
+    width: 40px; height: 4px;
+    background: var(--line-strong);
+    border-radius: 2px;
+    margin: -8px auto 18px;
+  }
+  .modal h2 {
+    font-size: 22px;
+    margin-bottom: 6px;
+    font-weight: 800;
+    letter-spacing: -0.02em;
+  }
+  .modal .subtitle { font-size: 14px; color: var(--muted); margin-bottom: 22px; line-height: 1.55; }
+
+  .form-group { margin-bottom: 16px; }
+  .form-group label {
+    display: block;
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.14em;
+    color: var(--muted);
+    margin-bottom: 7px;
+    font-weight: 700;
+  }
+  .form-group input[type=text], .form-group input[type=date], .manual-input {
+    width: 100%;
+    padding: 13px 14px;
+    border: 1px solid var(--line);
+    border-radius: 12px;
+    background: var(--card);
+    font-family: inherit;
+    font-size: 16px;
+    color: var(--ink);
+    transition: border-color 0.2s, box-shadow 0.2s;
+  }
+  .form-group input:focus, .manual-input:focus {
+    outline: none;
+    border-color: var(--turquoise);
+    box-shadow: 0 0 0 3px rgba(20, 184, 166, 0.15);
+  }
+  .manual-input { min-height: 130px; resize: vertical; line-height: 1.65; font-family: inherit; }
+
+  .btn {
+    width: 100%;
+    padding: 14px;
+    background: var(--gradient-deep);
+    color: white;
+    border: none;
+    border-radius: 12px;
+    font-family: inherit;
+    font-size: 15px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: transform 0.15s, box-shadow 0.2s;
+    box-shadow: 0 6px 16px -4px rgba(2, 132, 199, 0.4);
+  }
+  .btn:active { transform: scale(0.98); }
+  .btn.secondary {
+    background: transparent;
+    color: var(--ink-soft);
+    border: 1px solid var(--line);
+    box-shadow: none;
+  }
+
+  .trip-list { margin-bottom: 18px; }
+  .trip-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 14px;
+    border: 1px solid var(--line);
+    border-radius: 14px;
+    margin-bottom: 8px;
+    background: var(--card);
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+  .trip-item.active {
+    border-color: var(--turquoise);
+    background: linear-gradient(135deg, rgba(34, 211, 238, 0.08), rgba(20, 184, 166, 0.08));
+    border-inline-start: 4px solid var(--turquoise);
+    box-shadow: 0 4px 14px -4px rgba(20, 184, 166, 0.25);
+  }
+  .trip-item-info { flex: 1; min-width: 0; }
+  .trip-item-name { font-weight: 700; font-size: 15px; letter-spacing: -0.01em; }
+  .trip-item-meta { font-size: 12px; color: var(--muted); margin-top: 3px; font-weight: 500; }
+  .delete-x {
+    background: none;
+    border: 1px solid var(--line);
+    color: var(--muted);
+    width: 32px; height: 32px;
+    border-radius: 50%;
+    font-size: 18px;
+    cursor: pointer;
+    line-height: 1;
+    transition: all 0.2s;
+  }
+  .delete-x:active {
+    background: rgba(244, 63, 94, 0.1);
+    color: var(--red-record);
+    border-color: var(--red-record);
+  }
+
+  /* ============ CATEGORIES ============ */
+  .cat-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 8px;
+    margin-bottom: 22px;
+  }
+  .cat-chip {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 5px;
+    padding: 13px 6px 11px;
+    border: 1.5px solid var(--line);
+    border-radius: 16px;
+    background: var(--card);
+    cursor: pointer;
+    transition: transform 0.15s, border-color 0.2s, background 0.2s, box-shadow 0.2s;
+    font-family: inherit;
+    user-select: none;
+  }
+  .cat-chip:active { transform: scale(0.94); }
+  .cat-chip.selected {
+    border-color: var(--cat-color);
+    background: var(--cat-tint);
+    box-shadow: 0 4px 14px -4px var(--cat-shadow);
+  }
+  .cat-emoji { font-size: 24px; line-height: 1; }
+  .cat-label {
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--ink-soft);
+    letter-spacing: -0.005em;
+  }
+  .cat-chip.selected .cat-label { color: var(--cat-color); }
+  .cat-counter {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 22px;
+    height: 22px;
+    padding: 0 7px;
+    border-radius: 100px;
+    background: rgba(255, 255, 255, 0.25);
+    color: white;
+    font-size: 11px;
+    font-weight: 700;
+    margin-inline-start: 8px;
+  }
+
+  .entry-tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 5px;
+    margin-bottom: 9px;
+  }
+  .entry-tag {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 3px 9px 3px 7px;
+    border-radius: 100px;
+    font-size: 11px;
+    font-weight: 600;
+    background: var(--tag-tint);
+    color: var(--tag-color);
+    border: 1px solid var(--tag-border);
+    line-height: 1.4;
+  }
+  .entry-tag .e { font-size: 12px; line-height: 1; }
+
+  .toast {
+    position: fixed;
+    bottom: 30px;
+    left: 50%;
+    transform: translateX(-50%) translateY(100px);
+    background: var(--ink);
+    color: white;
+    padding: 12px 22px;
+    border-radius: 100px;
+    font-size: 14px;
+    font-weight: 500;
+    z-index: 200;
+    transition: transform 0.3s cubic-bezier(0.2, 0.8, 0.2, 1);
+    box-shadow: 0 14px 36px -10px rgba(10, 37, 64, 0.4);
+    max-width: calc(100vw - 40px);
+    text-align: center;
+    pointer-events: none;
+  }
+  .toast.show { transform: translateX(-50%) translateY(0); }
+
+  .notice {
+    margin: 14px 22px 0;
+    padding: 12px 16px;
+    background: rgba(34, 211, 238, 0.1);
+    border: 1px solid rgba(20, 184, 166, 0.3);
+    border-radius: 12px;
+    font-size: 13px;
+    color: var(--primary-deep);
+    line-height: 1.55;
+    font-weight: 500;
+  }
+</style>
+</head>
+<body>
+
+<!-- ============ SPLASH SCREEN ============ -->
+<div class="splash" id="splash">
+  <svg class="splash-icon" viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
+    <defs>
+      <linearGradient id="iconBg" x1="50%" y1="0%" x2="50%" y2="100%">
+        <stop offset="0%" stop-color="#5eead4"/>
+        <stop offset="30%" stop-color="#22d3ee"/>
+        <stop offset="70%" stop-color="#0891b2"/>
+        <stop offset="100%" stop-color="#1d4ed8"/>
+      </linearGradient>
+      <radialGradient id="glowG" cx="50%" cy="45%" r="50%">
+        <stop offset="0%" stop-color="white" stop-opacity="0.18"/>
+        <stop offset="100%" stop-color="white" stop-opacity="0"/>
+      </radialGradient>
+    </defs>
+    <rect width="200" height="200" rx="46" fill="url(#iconBg)"/>
+    <rect width="200" height="200" rx="46" fill="url(#glowG)"/>
+    <!-- airplane top-right -->
+    <g fill="white">
+      <path d="M138 38 L 174 28 L 168 38 L 158 46 L 174 50 L 168 58 L 152 56 L 144 66 L 138 64 L 142 54 L 134 48 Z"/>
+    </g>
+    <!-- suitcase handle -->
+    <path d="M78 90 L 78 70 Q 78 62 86 62 L 110 62 Q 118 62 118 70 L 118 90"
+          stroke="white" stroke-width="6" fill="none" stroke-linecap="round"/>
+    <!-- suitcase body -->
+    <rect x="64" y="90" width="68" height="68" rx="7" fill="white"/>
+    <line x1="98" y1="92" x2="98" y2="156" stroke="#0891b2" stroke-width="2" opacity="0.45"/>
+    <rect x="74" y="96" width="6" height="3" rx="1" fill="#0891b2" opacity="0.4"/>
+    <rect x="116" y="96" width="6" height="3" rx="1" fill="#0891b2" opacity="0.4"/>
+    <rect x="70" y="158" width="8" height="6" rx="2" fill="white"/>
+    <rect x="118" y="158" width="8" height="6" rx="2" fill="white"/>
+    <!-- swoosh under suitcase -->
+    <path d="M28 120 Q 60 100, 98 116 Q 138 132, 178 102"
+          stroke="white" stroke-width="7" fill="none" stroke-linecap="round" opacity="0.95"/>
+    <!-- location pin to the right -->
+    <g transform="translate(132,118)">
+      <path d="M0 0 C 0 -11, 9 -19, 19 -19 C 29 -19, 38 -11, 38 0 C 38 16, 19 38, 19 38 C 19 38, 0 16, 0 0 Z" fill="white"/>
+      <circle cx="19" cy="-1" r="6.5" fill="#1d4ed8"/>
+    </g>
+  </svg>
+  <div class="splash-name">
+    <span>Trip</span>
+    <span class="diary-word">diary</span>
+  </div>
+  <div class="splash-tagline" data-i18n="tagline">Your journey, in your voice</div>
+</div>
+
+<!-- ============ APP ============ -->
+<div id="app">
+  <header>
+    <div class="header-top">
+      <div class="logo">
+        <svg class="logo-plane" viewBox="0 0 100 14" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+          <path d="M2 11 Q 30 2, 78 4" stroke="currentColor" stroke-width="1.4" stroke-dasharray="2 2.5" stroke-linecap="round"/>
+          <path d="M73 1 L 86 4 L 76 6.5 L 73 11 L 71 6.5 Z" fill="currentColor"/>
+        </svg>
+        <span class="logo-trip">Trip</span><span class="logo-diary">diary</span>
+      </div>
+      <div class="header-actions">
+        <button class="icon-btn lang-btn" id="langBtn">עב</button>
+        <button class="icon-btn" id="tripsBtn" data-i18n="trips">Trips</button>
+      </div>
+    </div>
+    <div class="trip-line" id="tripLine">
+      <span class="trip-name">—</span>
+    </div>
+  </header>
+
+  <section class="recorder">
+    <div class="location-pill location-loading" id="locationPill">
+      <span class="location-dot"></span>
+      <span class="location-text" id="locationText" data-i18n="locating">Locating…</span>
+    </div>
+
+    <button class="record-btn" id="recordBtn" aria-label="Record">
+      <svg class="mic-icon" viewBox="0 0 24 24"><path d="M12 14a3 3 0 003-3V5a3 3 0 00-6 0v6a3 3 0 003 3zm5-3a5 5 0 01-10 0H5a7 7 0 006 6.92V21h2v-3.08A7 7 0 0019 11h-2z"/></svg>
+    </button>
+    <div class="record-label" id="recordLabel" data-i18n="tap_to_record">Tap to record</div>
+    <div class="timer mono" id="timer"></div>
+
+    <div class="live-transcript empty" id="liveTranscript" style="display:none">
+      <span data-i18n="start_speaking">Start speaking…</span>
+    </div>
+  </section>
+
+  <main class="feed" id="feed"></main>
+</div>
+
+<div class="modal-backdrop" id="modalBackdrop">
+  <div class="modal" id="modal" onclick="event.stopPropagation()">
+    <div class="modal-handle"></div>
+    <div id="modalContent"></div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+  // ============ I18N ============
+  const I18N = {
+    en: {
+      trips: 'Trips',
+      tagline: 'Your journey, in your voice',
+      locating: 'Locating…',
+      no_location: 'No location access',
+      tap_to_record: 'Tap to record',
+      recording: 'Recording… tap to stop',
+      start_speaking: 'Start speaking…',
+      add_tags: 'Add tags (optional)',
+      add_tags_sub: 'Tap to select what describes this moment. You can skip if you prefer.',
+      start_recording: 'Start recording',
+      tags_selected: 'selected',
+      journal: 'Journal',
+      day_label: 'DAY',
+      no_active_trip: 'No active trip',
+      create_to_start: 'Create a trip to start',
+      welcome_title: 'Welcome to Trip diary',
+      welcome_sub: 'Create your first trip to start journaling your adventure',
+      create_trip: 'Create trip',
+      empty_title: 'Your journal is empty',
+      empty_sub: 'Tap the record button above to capture your first memory',
+      new_trip_title: 'New trip',
+      new_trip_sub: 'Give your trip a name and a start date. Every entry will be saved with its location automatically.',
+      trip_name: 'Trip name',
+      start_date: 'Start date',
+      trip_placeholder: 'The Big Trip',
+      cancel: 'Cancel',
+      create: 'Create trip',
+      my_trips: 'My Trips',
+      my_trips_sub: 'Select an active trip or create a new one',
+      no_trips_yet: 'No trips yet',
+      new_trip_btn: '+ New trip',
+      close: 'Close',
+      manual_title: 'Type manually',
+      manual_sub: 'This browser does not support voice transcription. Try Chrome for full functionality. Meanwhile, you can type.',
+      write_placeholder: 'Tell us about your day…',
+      save: 'Save entry',
+      edit: 'Edit',
+      delete: 'Delete',
+      del_entry_confirm: 'Delete this entry?',
+      del_trip_confirm: 'Delete trip "{name}" and all {count} entries?',
+      entries: 'entries',
+      entry: 'entry',
+      started: 'Started',
+      saved: 'Entry saved',
+      no_text: 'No text captured',
+      need_name: 'Enter a name',
+      need_date: 'Select a date',
+      need_text: 'Write something',
+      deleted: 'Deleted',
+      trip_created: 'Trip created',
+      need_trip: 'Create a trip first',
+      no_mic: 'No microphone access. Allow in browser settings',
+      no_hebrew: 'Language not supported. Try Chrome',
+      rec_error: 'Error starting recording',
+      edit_prompt: 'Edit:',
+      no_speech_notice: 'Voice transcription is not available in this browser. Open in Chrome for the full experience. Meanwhile, you can type manually.',
+      days_full: ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'],
+      months: ['January','February','March','April','May','June','July','August','September','October','November','December']
+    },
+    he: {
+      trips: 'טיולים',
+      tagline: 'המסע שלך, בקול שלך',
+      locating: 'מאתר מיקום…',
+      no_location: 'אין גישה למיקום',
+      tap_to_record: 'הקש להקלטה',
+      recording: 'מקליט… הקש לעצור',
+      start_speaking: 'התחל לדבר…',
+      add_tags: 'הוסף תגיות (אופציונלי)',
+      add_tags_sub: 'הקש כדי לבחור מה מתאר את הרגע. אפשר לדלג.',
+      start_recording: 'התחל הקלטה',
+      tags_selected: 'נבחרו',
+      journal: 'היומן',
+      day_label: 'יום',
+      no_active_trip: 'אין טיול פעיל',
+      create_to_start: 'צור טיול חדש כדי להתחיל',
+      welcome_title: 'ברוך הבא ל-Trip diary',
+      welcome_sub: 'צור את הטיול הראשון שלך כדי להתחיל לתעד את ההרפתקה',
+      create_trip: 'צור טיול חדש',
+      empty_title: 'היומן עוד ריק',
+      empty_sub: 'הקש על כפתור ההקלטה למעלה והתחל לתעד את הרגע',
+      new_trip_title: 'טיול חדש',
+      new_trip_sub: 'תן לטיול שם ותאריך התחלה. כל רשומה תישמר אוטומטית עם המיקום שלך באותו רגע.',
+      trip_name: 'שם הטיול',
+      start_date: 'תאריך התחלה',
+      trip_placeholder: 'הטיול הגדול',
+      cancel: 'ביטול',
+      create: 'צור טיול',
+      my_trips: 'הטיולים שלי',
+      my_trips_sub: 'בחר טיול פעיל או צור חדש',
+      no_trips_yet: 'עדיין אין טיולים',
+      new_trip_btn: '+ טיול חדש',
+      close: 'סגור',
+      manual_title: 'הקלדה ידנית',
+      manual_sub: 'הדפדפן הזה לא תומך בתמלול קולי. אפשר להקליד את הרשומה ידנית. ב-Chrome התמלול הקולי יעבוד.',
+      write_placeholder: 'ספר על היום…',
+      save: 'שמור רשומה',
+      edit: 'ערוך',
+      delete: 'מחק',
+      del_entry_confirm: 'למחוק את הרשומה?',
+      del_trip_confirm: 'למחוק את הטיול "{name}" ואת כל {count} הרשומות שלו?',
+      entries: 'רשומות',
+      entry: 'רשומה',
+      started: 'החל ב-',
+      saved: 'רשומה נשמרה',
+      no_text: 'לא נקלט טקסט',
+      need_name: 'הזן שם',
+      need_date: 'בחר תאריך',
+      need_text: 'כתוב משהו',
+      deleted: 'נמחק',
+      trip_created: 'טיול נוצר',
+      need_trip: 'צור טיול קודם',
+      no_mic: 'אין גישה למיקרופון. אפשר הרשאה בהגדרות',
+      no_hebrew: 'עברית לא נתמכת. נסה Chrome',
+      rec_error: 'שגיאה בהפעלת ההקלטה',
+      edit_prompt: 'ערוך:',
+      no_speech_notice: 'הדפדפן הזה לא תומך בתמלול קולי בעברית. נסה לפתוח ב-Chrome לחוויה מלאה. בינתיים אפשר להקליד ידנית.',
+      days_full: ['ראשון','שני','שלישי','רביעי','חמישי','שישי','שבת'],
+      months: ['ינואר','פברואר','מרץ','אפריל','מאי','יוני','יולי','אוגוסט','ספטמבר','אוקטובר','נובמבר','דצמבר']
+    }
+  };
+
+  let lang = 'en';
+
+  // ============ CATEGORIES ============
+  const CATEGORIES = [
+    { id: 'morning', emoji: '🌅', en: 'Morning',  he: 'בוקר',   color: '#f97316' },
+    { id: 'noon',    emoji: '☀️', en: 'Noon',     he: 'צהריים', color: '#eab308' },
+    { id: 'night',   emoji: '🌙', en: 'Night',    he: 'לילה',   color: '#6366f1' },
+    { id: 'beach',   emoji: '🌊', en: 'Beach',    he: 'ים',     color: '#06b6d4' },
+    { id: 'party',   emoji: '🎉', en: 'Party',    he: 'מסיבה',  color: '#f59e0b' },
+    { id: 'food',    emoji: '🍴', en: 'Food',     he: 'אוכל',   color: '#ef4444' },
+    { id: 'girls',   emoji: '💃', en: 'Girls',    he: 'בנות',   color: '#ec4899' },
+    { id: 'boys',    emoji: '🕺', en: 'Boys',     he: 'בנים',   color: '#3b82f6' },
+    { id: 'happy',   emoji: '😊', en: 'Happy',    he: 'שמח',    color: '#22c55e' },
+    { id: 'sad',     emoji: '😢', en: 'Sad',      he: 'עצוב',   color: '#64748b' },
+    { id: 'calm',    emoji: '😌', en: 'Calm',     he: 'רגוע',   color: '#14b8a6' },
+    { id: 'tired',   emoji: '😴', en: 'Tired',    he: 'עייף',   color: '#8b5cf6' },
+    { id: 'soul',    emoji: '✨', en: 'Soul',     he: 'נפש',    color: '#a855f7' }
+  ];
+  const catById = id => CATEGORIES.find(c => c.id === id);
+  function t(key, vars) {
+    let str = I18N[lang][key];
+    if (str === undefined) return key;
+    if (typeof str === 'string' && vars) {
+      Object.entries(vars).forEach(([k,v]) => { str = str.replace(`{${k}}`, v); });
+    }
+    return str;
+  }
+
+  // ============ STORAGE WRAPPER ============
+  const store = {
+    async get(k) {
+      try {
+        if (typeof window.storage !== 'undefined' && window.storage) {
+          const r = await window.storage.get(k);
+          return r ? r.value : null;
+        }
+      } catch (e) {}
+      try { return localStorage.getItem(k); } catch(e) { return null; }
+    },
+    async set(k, v) {
+      try {
+        if (typeof window.storage !== 'undefined' && window.storage) {
+          await window.storage.set(k, v);
+          return;
+        }
+      } catch (e) {}
+      try { localStorage.setItem(k, v); } catch(e) {}
+    }
+  };
+
+  // ============ STATE ============
+  let state = { trips: [], currentTripId: null, entries: [] };
+  let currentLocation = null;
+  let recognition = null;
+  let isRecording = false;
+  let finalTranscript = '';
+  let interimTranscript = '';
+  let recordStartTime = 0;
+  let timerInterval = null;
+  let sessionCategories = [];
+
+  const $ = id => document.getElementById(id);
+  const uid = () => Date.now().toString(36) + Math.random().toString(36).slice(2, 7);
+
+  function fmtDate(d) {
+    const months = I18N[lang].months;
+    if (lang === 'he') return `${d.getDate()} ב${months[d.getMonth()]} ${d.getFullYear()}`;
+    return `${months[d.getMonth()]} ${d.getDate()}, ${d.getFullYear()}`;
+  }
+  function fmtTime(d) {
+    return `${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}`;
+  }
+  function dateKey(ts) {
+    const d = new Date(ts);
+    return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+  }
+  function daysSince(startISO, dateISO) {
+    const s = new Date(startISO); const e = new Date(dateISO);
+    s.setHours(0,0,0,0); e.setHours(0,0,0,0);
+    return Math.floor((e - s) / 86400000) + 1;
+  }
+  function escapeHtml(s) {
+    if (s === null || s === undefined) return '';
+    return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+  }
+  function toast(msg, dur = 2400) {
+    const t = $('toast');
+    t.textContent = msg;
+    t.classList.add('show');
+    clearTimeout(t._timer);
+    t._timer = setTimeout(() => t.classList.remove('show'), dur);
+  }
+  function pluralEntries(n) {
+    if (lang === 'he') return n === 1 ? 'רשומה' : 'רשומות';
+    return n === 1 ? 'entry' : 'entries';
+  }
+
+  // ============ LANGUAGE ============
+  async function setLang(newLang) {
+    lang = newLang === 'he' ? 'he' : 'en';
+    document.documentElement.lang = lang;
+    document.documentElement.dir = lang === 'he' ? 'rtl' : 'ltr';
+    $('langBtn').textContent = lang === 'he' ? 'EN' : 'עב';
+    document.querySelectorAll('[data-i18n]').forEach(el => {
+      const key = el.getAttribute('data-i18n');
+      el.textContent = t(key);
+    });
+    $('recordBtn').setAttribute('aria-label', t('tap_to_record'));
+    renderAll();
+    await store.set('lang', lang);
+  }
+
+  // ============ PERSISTENCE ============
+  async function load() {
+    const data = await store.get('travel-journal-data');
+    if (data) {
+      try {
+        const parsed = typeof data === 'string' ? JSON.parse(data) : data;
+        state = { ...state, ...parsed };
+      } catch(e){}
+    }
+    const savedLang = await store.get('lang');
+    if (savedLang === 'he' || savedLang === 'en') lang = savedLang;
+  }
+  async function save() { await store.set('travel-journal-data', JSON.stringify(state)); }
+
+  // ============ LOCATION ============
+  async function fetchLocation() {
+    if (!navigator.geolocation) {
+      $('locationPill').classList.remove('location-loading');
+      $('locationText').textContent = t('no_location');
+      return null;
+    }
+    return new Promise(resolve => {
+      navigator.geolocation.getCurrentPosition(async (pos) => {
+        const { latitude, longitude } = pos.coords;
+        currentLocation = { lat: latitude, lng: longitude };
+        try {
+          const langCode = lang === 'he' ? 'he' : 'en';
+          const r = await fetch(`https://nominatim.openstreetmap.org/reverse?lat=${latitude}&lon=${longitude}&format=json&accept-language=${langCode}`);
+          const data = await r.json();
+          const a = data.address || {};
+          const city = a.city || a.town || a.village || a.municipality || a.county || a.state || '';
+          const country = a.country || '';
+          currentLocation.city = city;
+          currentLocation.country = country;
+          const locText = [city, country].filter(Boolean).join(', ') || `${latitude.toFixed(2)}°, ${longitude.toFixed(2)}°`;
+          $('locationText').textContent = locText;
+        } catch(e) {
+          $('locationText').textContent = `${latitude.toFixed(2)}°, ${longitude.toFixed(2)}°`;
+        }
+        $('locationPill').classList.remove('location-loading');
+        resolve(currentLocation);
+      }, () => {
+        $('locationPill').classList.remove('location-loading');
+        $('locationText').textContent = t('no_location');
+        resolve(null);
+      }, { enableHighAccuracy: false, timeout: 8000, maximumAge: 60000 });
+    });
+  }
+
+  // ============ RECORDING ============
+  function setupRecognition() {
+    const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+    if (!SR) return null;
+    const r = new SR();
+    r.lang = lang === 'he' ? 'he-IL' : 'en-US';
+    r.continuous = true;
+    r.interimResults = true;
+    return r;
+  }
+
+  function startRecording() {
+    finalTranscript = ''; interimTranscript = '';
+    const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+    if (!SR) { openManualEntry(); return; }
+
+    recognition = setupRecognition();
+    recognition.onresult = (e) => {
+      interimTranscript = '';
+      for (let i = e.resultIndex; i < e.results.length; i++) {
+        const tx = e.results[i][0].transcript;
+        if (e.results[i].isFinal) finalTranscript += tx + ' ';
+        else interimTranscript += tx;
+      }
+      updateLiveTranscript();
+    };
+    recognition.onerror = (e) => {
+      if (e.error === 'not-allowed') { toast(t('no_mic')); stopRecording(false); }
+      else if (e.error === 'language-not-supported') toast(t('no_hebrew'));
+    };
+    recognition.onend = () => {
+      if (isRecording) { try { recognition.start(); } catch(e){} }
+    };
+
+    try { recognition.start(); } catch(e) { toast(t('rec_error')); return; }
+
+    isRecording = true;
+    recordStartTime = Date.now();
+    const b = $('recordBtn');
+    b.classList.add('recording');
+    b.innerHTML = '<div class="stop-icon"></div>';
+    $('recordLabel').textContent = t('recording');
+    $('liveTranscript').style.display = 'block';
+    updateLiveTranscript();
+
+    timerInterval = setInterval(() => {
+      const s = Math.floor((Date.now() - recordStartTime) / 1000);
+      $('timer').textContent = `${String(Math.floor(s/60)).padStart(2,'0')}:${String(s%60).padStart(2,'0')}`;
+    }, 250);
+  }
+
+  function updateLiveTranscript() {
+    const el = $('liveTranscript');
+    const final = finalTranscript.trim();
+    const interim = interimTranscript.trim();
+    if (!final && !interim) {
+      el.innerHTML = `<span>${escapeHtml(t('start_speaking'))}</span>`;
+      el.classList.add('empty');
+    } else {
+      el.classList.remove('empty');
+      el.innerHTML = escapeHtml(final) + (interim ? '<span class="interim"> ' + escapeHtml(interim) + '</span>' : '');
+    }
+  }
+
+  async function stopRecording(savePresent = true) {
+    isRecording = false;
+    clearInterval(timerInterval);
+    $('timer').textContent = '';
+    const b = $('recordBtn');
+    b.classList.remove('recording');
+    b.innerHTML = '<svg class="mic-icon" viewBox="0 0 24 24"><path d="M12 14a3 3 0 003-3V5a3 3 0 00-6 0v6a3 3 0 003 3zm5-3a5 5 0 01-10 0H5a7 7 0 006 6.92V21h2v-3.08A7 7 0 0019 11h-2z"/></svg>';
+    $('recordLabel').textContent = t('tap_to_record');
+    $('liveTranscript').style.display = 'none';
+    if (recognition) { try { recognition.stop(); } catch(e){} recognition = null; }
+    const text = (finalTranscript + ' ' + interimTranscript).trim();
+    if (savePresent && text) await saveEntry(text);
+    else {
+      if (savePresent && !text) toast(t('no_text'));
+      sessionCategories = [];
+    }
+    finalTranscript = ''; interimTranscript = '';
+  }
+
+  async function saveEntry(text) {
+    if (!state.currentTripId) { toast(t('need_trip')); return; }
+    const entry = {
+      id: uid(),
+      tripId: state.currentTripId,
+      timestamp: Date.now(),
+      text: text,
+      location: currentLocation ? { ...currentLocation } : null,
+      categories: [...sessionCategories]
+    };
+    state.entries.unshift(entry);
+    sessionCategories = [];
+    await save();
+    renderAll();
+    toast(t('saved'));
+  }
+
+  async function deleteEntry(id) {
+    if (!confirm(t('del_entry_confirm'))) return;
+    state.entries = state.entries.filter(e => e.id !== id);
+    await save();
+    renderAll();
+    toast(t('deleted'));
+  }
+
+  async function editEntry(id) {
+    const e = state.entries.find(x => x.id === id);
+    if (!e) return;
+    const newText = prompt(t('edit_prompt'), e.text);
+    if (newText !== null && newText.trim()) {
+      e.text = newText.trim();
+      await save();
+      renderAll();
+    }
+  }
+
+  // ============ TRIPS ============
+  async function createTrip(name, startDate) {
+    const trip = { id: uid(), name: name.trim(), startDate };
+    state.trips.push(trip);
+    state.currentTripId = trip.id;
+    await save();
+    renderAll();
+    toast(t('trip_created'));
+  }
+  async function selectTrip(id) {
+    state.currentTripId = id;
+    await save();
+    renderAll();
+    closeModal();
+  }
+  async function deleteTrip(id) {
+    const trip = state.trips.find(tr => tr.id === id);
+    if (!trip) return;
+    const count = state.entries.filter(e => e.tripId === id).length;
+    if (!confirm(t('del_trip_confirm', { name: trip.name, count }))) return;
+    state.trips = state.trips.filter(tr => tr.id !== id);
+    state.entries = state.entries.filter(e => e.tripId !== id);
+    if (state.currentTripId === id) state.currentTripId = state.trips[0]?.id || null;
+    await save();
+    renderAll();
+    if (state.trips.length > 0) openTripsModal();
+  }
+
+  // ============ RENDER ============
+  function renderHeader() {
+    const trip = state.trips.find(tr => tr.id === state.currentTripId);
+    if (!trip) {
+      $('tripLine').innerHTML = `<span class="trip-name">${escapeHtml(t('no_active_trip'))}</span><span class="trip-sep">·</span><span>${escapeHtml(t('create_to_start'))}</span>`;
+      return;
+    }
+    const entries = state.entries.filter(e => e.tripId === trip.id);
+    const day = daysSince(trip.startDate, new Date().toISOString());
+    const dayLabel = lang === 'he' ? `יום ${day}` : `Day ${day}`;
+    $('tripLine').innerHTML = `
+      <span class="trip-name">${escapeHtml(trip.name)}</span>
+      <span class="trip-sep">·</span>
+      <span>${dayLabel}</span>
+      <span class="trip-sep">·</span>
+      <span>${entries.length} ${pluralEntries(entries.length)}</span>
+    `;
+  }
+
+  function renderFeed() {
+    const feed = $('feed');
+    if (!state.currentTripId) {
+      feed.innerHTML = `
+        <div class="empty-state">
+          <div class="empty-state-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2L13.5 8.5L20 10L13.5 11.5L12 18L10.5 11.5L4 10L10.5 8.5L12 2Z"/></svg></div>
+          <h3>${escapeHtml(t('welcome_title'))}</h3>
+          <p>${escapeHtml(t('welcome_sub'))}</p>
+          <button class="btn" style="margin-top:22px;max-width:220px" onclick="openNewTripModal()">${escapeHtml(t('create_trip'))}</button>
+        </div>`;
+      return;
+    }
+    const trip = state.trips.find(tr => tr.id === state.currentTripId);
+    const entries = state.entries
+      .filter(e => e.tripId === state.currentTripId)
+      .sort((a, b) => b.timestamp - a.timestamp);
+
+    if (entries.length === 0) {
+      feed.innerHTML = `
+        <div class="feed-header">
+          <h2>${escapeHtml(t('journal'))}</h2>
+          <span class="count">0</span>
+        </div>
+        <div class="empty-state">
+          <div class="empty-state-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/></svg></div>
+          <h3>${escapeHtml(t('empty_title'))}</h3>
+          <p>${escapeHtml(t('empty_sub'))}</p>
+        </div>`;
+      return;
+    }
+
+    const groups = {};
+    entries.forEach(e => {
+      const k = dateKey(e.timestamp);
+      if (!groups[k]) groups[k] = [];
+      groups[k].push(e);
+    });
+
+    let html = `
+      <div class="feed-header">
+        <h2>${escapeHtml(t('journal'))}</h2>
+        <span class="count">${entries.length}</span>
+      </div>`;
+
+    Object.keys(groups).sort().reverse().forEach(k => {
+      const dayEntries = groups[k];
+      const d = new Date(dayEntries[0].timestamp);
+      const dayNum = daysSince(trip.startDate, d.toISOString());
+      const locs = dayEntries.map(e => e.location).filter(Boolean);
+      const city = locs.map(l => l.city).filter(Boolean)[0] || '';
+      const country = locs.map(l => l.country).filter(Boolean)[0] || '';
+      const locLine = [city, country].filter(Boolean).join(', ');
+
+      html += `
+        <div class="day-group">
+          <div class="day-header">
+            <div class="day-stamp">
+              <div class="num">${dayNum}</div>
+              <div class="label">${escapeHtml(t('day_label'))}</div>
+            </div>
+            <div class="day-meta">
+              <div class="day-date">${escapeHtml(I18N[lang].days_full[d.getDay()])}, ${escapeHtml(fmtDate(d))}</div>
+              ${locLine ? `<div class="day-location">⌖ ${escapeHtml(locLine)}</div>` : ''}
+            </div>
+          </div>`;
+
+      dayEntries.forEach(e => {
+        const tm = new Date(e.timestamp);
+        const eLoc = e.location ? [e.location.city, e.location.country].filter(Boolean).join(', ') : '';
+        const tagsHtml = (e.categories && e.categories.length) ? (
+          '<div class="entry-tags">' +
+          e.categories.map(cid => {
+            const c = catById(cid);
+            if (!c) return '';
+            const lbl = c[lang] || c.en;
+            return `<span class="entry-tag" style="--tag-color:${c.color};--tag-tint:${c.color}14;--tag-border:${c.color}40"><span class="e">${c.emoji}</span> ${escapeHtml(lbl)}</span>`;
+          }).join('') +
+          '</div>'
+        ) : '';
+        html += `
+          <div class="entry" data-id="${e.id}" onclick="this.classList.toggle('open')">
+            <div class="entry-head">
+              <span class="entry-time mono">${fmtTime(tm)}</span>
+              ${eLoc ? `<span class="entry-loc">${escapeHtml(eLoc)}</span>` : ''}
+            </div>
+            ${tagsHtml}
+            <div class="entry-text">${escapeHtml(e.text)}</div>
+            <div class="entry-actions">
+              <button class="entry-action" onclick="event.stopPropagation();editEntry('${e.id}')">${escapeHtml(t('edit'))}</button>
+              <button class="entry-action danger" onclick="event.stopPropagation();deleteEntry('${e.id}')">${escapeHtml(t('delete'))}</button>
+            </div>
+          </div>`;
+      });
+      html += '</div>';
+    });
+    feed.innerHTML = html;
+  }
+
+  function renderAll() { renderHeader(); renderFeed(); }
+
+  // ============ MODALS ============
+  function openModal(html) {
+    $('modalContent').innerHTML = html;
+    $('modalBackdrop').classList.add('open');
+  }
+  function closeModal() { $('modalBackdrop').classList.remove('open'); }
+
+  function openCategoryModal() {
+    sessionCategories = [];
+    const chips = CATEGORIES.map(c => {
+      const label = c[lang] || c.en;
+      const hex = c.color;
+      return `
+        <button class="cat-chip" data-cat="${c.id}"
+          style="--cat-color:${hex};--cat-tint:${hex}1f;--cat-shadow:${hex}66"
+          onclick="toggleCategory(this, '${c.id}')">
+          <span class="cat-emoji">${c.emoji}</span>
+          <span class="cat-label">${escapeHtml(label)}</span>
+        </button>`;
+    }).join('');
+    openModal(`
+      <h2>${escapeHtml(t('add_tags'))}</h2>
+      <p class="subtitle">${escapeHtml(t('add_tags_sub'))}</p>
+      <div class="cat-grid">${chips}</div>
+      <button class="btn" id="startRecBtn" onclick="confirmCategoriesAndRecord()">
+        <span>${escapeHtml(t('start_recording'))}</span>
+        <span class="cat-counter" id="catCounter" style="display:none">0</span>
+      </button>
+      <button class="btn secondary" style="margin-top:10px" onclick="closeModal()">${escapeHtml(t('cancel'))}</button>
+    `);
+  }
+
+  function toggleCategory(btn, id) {
+    const idx = sessionCategories.indexOf(id);
+    if (idx >= 0) {
+      sessionCategories.splice(idx, 1);
+      btn.classList.remove('selected');
+    } else {
+      sessionCategories.push(id);
+      btn.classList.add('selected');
+    }
+    const counter = $('catCounter');
+    if (counter) {
+      if (sessionCategories.length > 0) {
+        counter.textContent = sessionCategories.length;
+        counter.style.display = 'inline-flex';
+      } else {
+        counter.style.display = 'none';
+      }
+    }
+  }
+
+  function confirmCategoriesAndRecord() {
+    closeModal();
+    setTimeout(() => startRecording(), 280);
+  }
+
+  function openNewTripModal() {
+    const today = new Date().toISOString().slice(0, 10);
+    openModal(`
+      <h2>${escapeHtml(t('new_trip_title'))}</h2>
+      <p class="subtitle">${escapeHtml(t('new_trip_sub'))}</p>
+      <div class="form-group">
+        <label>${escapeHtml(t('trip_name'))}</label>
+        <input type="text" id="newTripName" placeholder="${escapeHtml(t('trip_placeholder'))}" autocomplete="off">
+      </div>
+      <div class="form-group">
+        <label>${escapeHtml(t('start_date'))}</label>
+        <input type="date" id="newTripDate" value="${today}">
+      </div>
+      <button class="btn" onclick="submitNewTrip()">${escapeHtml(t('create'))}</button>
+      <button class="btn secondary" style="margin-top:10px" onclick="closeModal()">${escapeHtml(t('cancel'))}</button>
+    `);
+    setTimeout(() => $('newTripName')?.focus(), 200);
+  }
+
+  async function submitNewTrip() {
+    const name = $('newTripName').value.trim();
+    const date = $('newTripDate').value;
+    if (!name) { toast(t('need_name')); return; }
+    if (!date) { toast(t('need_date')); return; }
+    await createTrip(name, date);
+    closeModal();
+  }
+
+  function openTripsModal() {
+    const items = state.trips.map(tr => {
+      const count = state.entries.filter(e => e.tripId === tr.id).length;
+      const isActive = tr.id === state.currentTripId;
+      const startD = new Date(tr.startDate);
+      return `
+        <div class="trip-item ${isActive ? 'active' : ''}" onclick="selectTrip('${tr.id}')">
+          <div class="trip-item-info">
+            <div class="trip-item-name">${escapeHtml(tr.name)}</div>
+            <div class="trip-item-meta">${escapeHtml(t('started'))} ${escapeHtml(fmtDate(startD))} · ${count} ${escapeHtml(pluralEntries(count))}</div>
+          </div>
+          <button class="delete-x" onclick="event.stopPropagation();deleteTrip('${tr.id}')" aria-label="Delete">×</button>
+        </div>`;
+    }).join('');
+    openModal(`
+      <h2>${escapeHtml(t('my_trips'))}</h2>
+      <p class="subtitle">${escapeHtml(t('my_trips_sub'))}</p>
+      <div class="trip-list">${items || `<p style="text-align:center;color:var(--muted);padding:20px;font-style:italic">${escapeHtml(t('no_trips_yet'))}</p>`}</div>
+      <button class="btn" onclick="openNewTripModal()">${escapeHtml(t('new_trip_btn'))}</button>
+      <button class="btn secondary" style="margin-top:10px" onclick="closeModal()">${escapeHtml(t('close'))}</button>
+    `);
+  }
+
+  function openManualEntry() {
+    openModal(`
+      <h2>${escapeHtml(t('manual_title'))}</h2>
+      <p class="subtitle">${escapeHtml(t('manual_sub'))}</p>
+      <div class="form-group">
+        <textarea class="manual-input" id="manualText" placeholder="${escapeHtml(t('write_placeholder'))}"></textarea>
+      </div>
+      <button class="btn" onclick="submitManual()">${escapeHtml(t('save'))}</button>
+      <button class="btn secondary" style="margin-top:10px" onclick="closeModal()">${escapeHtml(t('cancel'))}</button>
+    `);
+    setTimeout(() => $('manualText')?.focus(), 200);
+  }
+
+  async function submitManual() {
+    const text = $('manualText').value.trim();
+    if (!text) { toast(t('need_text')); return; }
+    await saveEntry(text);
+    closeModal();
+  }
+
+  // expose for inline handlers
+  window.openNewTripModal = openNewTripModal;
+  window.submitNewTrip = submitNewTrip;
+  window.closeModal = closeModal;
+  window.selectTrip = selectTrip;
+  window.deleteTrip = deleteTrip;
+  window.deleteEntry = deleteEntry;
+  window.editEntry = editEntry;
+  window.openManualEntry = openManualEntry;
+  window.submitManual = submitManual;
+  window.openCategoryModal = openCategoryModal;
+  window.toggleCategory = toggleCategory;
+  window.confirmCategoriesAndRecord = confirmCategoriesAndRecord;
+
+  // ============ EVENTS ============
+  $('recordBtn').addEventListener('click', () => {
+    if (!state.currentTripId) { openNewTripModal(); return; }
+    if (isRecording) stopRecording(true);
+    else openCategoryModal();
+  });
+  $('tripsBtn').addEventListener('click', openTripsModal);
+  $('langBtn').addEventListener('click', () => setLang(lang === 'he' ? 'en' : 'he'));
+  $('modalBackdrop').addEventListener('click', closeModal);
+
+  // ============ INIT ============
+  (async () => {
+    await load();
+    await setLang(lang);
+    fetchLocation();
+    const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+    if (!SR) {
+      const notice = document.createElement('div');
+      notice.className = 'notice';
+      notice.textContent = t('no_speech_notice');
+      document.querySelector('header').after(notice);
+    }
+    setTimeout(() => { $('splash').classList.add('hidden'); }, 1800);
+  })();
+</script>
+</body>
+</html>
