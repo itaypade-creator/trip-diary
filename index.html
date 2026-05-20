@@ -458,7 +458,8 @@
       no_trips_yet: 'No trips yet', new_trip_btn: '+ New trip', close: 'Close',
       manual_title: 'Type manually', manual_sub: 'This browser does not support voice transcription. Try Chrome for full functionality. Meanwhile, you can type.',
       write_placeholder: 'Tell us about your day…', save: 'Save entry',
-      edit: 'Edit', delete: 'Delete', add_photo: 'Add photo',
+      edit: 'Edit', delete: 'Delete', add_photo: 'Add photo', listen: 'Listen', stop_listen: 'Stop',
+      no_tts: 'Read-aloud not supported in this browser',
       del_entry_confirm: 'Delete this entry?', del_trip_confirm: 'Delete trip "{name}" and all {count} entries?',
       entries: 'entries', entry: 'entry', started: 'Started',
       saved: 'Entry saved', no_text: 'No text captured', need_name: 'Enter a name', need_date: 'Select a date',
@@ -501,7 +502,8 @@
       no_trips_yet: 'עדיין אין טיולים', new_trip_btn: '+ טיול חדש', close: 'סגור',
       manual_title: 'הקלדה ידנית', manual_sub: 'הדפדפן הזה לא תומך בתמלול קולי. אפשר להקליד ידנית. ב-Chrome התמלול הקולי יעבוד.',
       write_placeholder: 'ספר על היום…', save: 'שמור רשומה',
-      edit: 'ערוך', delete: 'מחק', add_photo: 'הוסף תמונה',
+      edit: 'ערוך', delete: 'מחק', add_photo: 'הוסף תמונה', listen: 'הקרא', stop_listen: 'עצור',
+      no_tts: 'הקראה לא נתמכת בדפדפן הזה',
       del_entry_confirm: 'למחוק את הרשומה?', del_trip_confirm: 'למחוק את הטיול "{name}" ואת כל {count} הרשומות שלו?',
       entries: 'רשומות', entry: 'רשומה', started: 'החל ב-',
       saved: 'רשומה נשמרה', no_text: 'לא נקלט טקסט', need_name: 'הזן שם', need_date: 'בחר תאריך',
@@ -783,6 +785,41 @@
     const nv = prompt(t('edit_prompt'), e.text);
     if (nv!==null && nv.trim()){ e.text = nv.trim(); await save(); renderAll(); }
   }
+
+  // ============ TEXT-TO-SPEECH (read aloud) ============
+  let speakingId = null;
+  function pickVoice(text){
+    const voices = window.speechSynthesis.getVoices() || [];
+    // detect Hebrew characters -> prefer he voice, else en
+    const isHe = /[\u0590-\u05FF]/.test(text);
+    const want = isHe ? 'he' : 'en';
+    let v = voices.find(x => x.lang && x.lang.toLowerCase().startsWith(want));
+    if (!v && isHe) v = voices.find(x => x.lang && x.lang.toLowerCase().startsWith('iw')); // legacy Hebrew code
+    return { voice: v || null, lang: isHe ? 'he-IL' : 'en-US' };
+  }
+  function resetListenButtons(){
+    document.querySelectorAll('.listen-btn').forEach(b => { b.innerHTML = '🔊 ' + t('listen'); });
+  }
+  function toggleSpeak(id, btn){
+    if (!('speechSynthesis' in window)){ toast(t('no_tts')); return; }
+    const synth = window.speechSynthesis;
+    // if this entry is already speaking -> stop
+    if (speakingId === id){ synth.cancel(); speakingId = null; resetListenButtons(); return; }
+    // stop anything else first
+    synth.cancel(); resetListenButtons();
+    const e = state.entries.find(x=>x.id===id);
+    if (!e || !e.text){ return; }
+    const { voice, lang } = pickVoice(e.text);
+    const u = new SpeechSynthesisUtterance(e.text);
+    u.lang = lang; if (voice) u.voice = voice; u.rate = 1; u.pitch = 1;
+    u.onend = () => { speakingId = null; resetListenButtons(); };
+    u.onerror = () => { speakingId = null; resetListenButtons(); };
+    speakingId = id;
+    if (btn) btn.innerHTML = '⏹ ' + t('stop_listen');
+    synth.speak(u);
+  }
+  // some browsers load voices async
+  if ('speechSynthesis' in window){ window.speechSynthesis.onvoiceschanged = () => {}; }
   async function addPhotoToEntry(id){
     const e = state.entries.find(x=>x.id===id); if (!e) return;
     const inp = document.createElement('input'); inp.type='file'; inp.accept='image/*'; inp.multiple=true;
@@ -912,6 +949,7 @@
           <div class="entry-head"><span class="entry-time mono">${fmtTime(tm)}</span>${eLoc?`<span class="entry-loc">${escapeHtml(eLoc)}</span>`:''}</div>
           ${tagsHtml}<div class="entry-text">${escapeHtml(e.text)}</div>${photoHtml}${videoHtml}
           <div class="entry-actions">
+            <button class="entry-action listen-btn" data-listen="${e.id}" onclick="event.stopPropagation();toggleSpeak('${e.id}', this)">🔊 ${escapeHtml(t('listen'))}</button>
             <button class="entry-action" onclick="event.stopPropagation();editEntry('${e.id}')">${escapeHtml(t('edit'))}</button>
             <button class="entry-action" onclick="event.stopPropagation();addPhotoToEntry('${e.id}')">${escapeHtml(t('add_photo'))}</button>
             <button class="entry-action danger" onclick="event.stopPropagation();deleteEntry('${e.id}')">${escapeHtml(t('delete'))}</button>
@@ -1018,6 +1056,7 @@
 
   // ============ VIEW SWITCHING ============
   function switchView(view){
+    if ('speechSynthesis' in window){ window.speechSynthesis.cancel(); speakingId=null; }
     currentView = view;
     document.querySelectorAll('.tab').forEach(b=>b.classList.toggle('active', b.dataset.view===view));
     document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));
@@ -1155,7 +1194,7 @@
   Object.assign(window, { openNewTripModal, submitNewTrip, closeModal, selectTrip, deleteTrip, deleteEntry, editEntry,
     addPhotoToEntry, openManualEntry, submitManual, openCategoryModal, toggleCategory, confirmCategoriesAndRecord,
     removeSessionPhoto, removeSessionVideo, toggleFilter, openLightbox, exportTxt,
-    setJournalType, openDestinationModal, chooseDestination });
+    setJournalType, openDestinationModal, chooseDestination, toggleSpeak });
 
   // ============ EVENTS ============
   $('recordBtn').addEventListener('click', ()=>{ if(!state.currentTripId){openNewTripModal();return;} if(isRecording) stopRecording(true); else openCategoryModal(); });
