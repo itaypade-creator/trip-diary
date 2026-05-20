@@ -95,6 +95,34 @@
   .tab svg { width: 15px; height: 15px; }
   .tab.active { background: var(--grad); color: white; box-shadow: 0 4px 12px -3px rgba(20,184,166,0.5); }
 
+  /* JOURNAL TYPE TOGGLE */
+  .journal-toggle { display: flex; gap: 0; background: rgba(255,255,255,0.5); padding: 4px; border-radius: 100px; border: 1px solid var(--line); margin-top: 8px; }
+  .jt-btn { flex: 1; padding: 8px 6px; border: none; background: transparent; border-radius: 100px; cursor: pointer;
+    font-family: inherit; font-size: 13px; font-weight: 700; color: var(--muted); transition: all 0.2s; display: flex; align-items: center; justify-content: center; gap: 6px; }
+  .jt-btn svg { width: 14px; height: 14px; }
+  .jt-btn.active { background: var(--grad); color: white; box-shadow: 0 4px 12px -3px rgba(20,184,166,0.5); }
+
+  /* DESTINATION PICKER */
+  .dest-opt { display: flex; align-items: center; gap: 14px; padding: 16px; border: 1.5px solid var(--line);
+    border-radius: 16px; background: var(--card); cursor: pointer; margin-bottom: 10px; transition: all 0.18s; }
+  .dest-opt:active { transform: scale(0.98); }
+  .dest-opt.sel { border-color: var(--turquoise); background: linear-gradient(135deg, rgba(34,211,238,0.08), rgba(20,184,166,0.08)); box-shadow: 0 4px 14px -4px rgba(20,184,166,0.3); }
+  .dest-ic { width: 44px; height: 44px; border-radius: 13px; background: var(--grad); display: flex; align-items: center; justify-content: center; color: white; flex-shrink: 0; }
+  .dest-ic svg { width: 22px; height: 22px; }
+  .dest-info { flex: 1; }
+  .dest-info .tt { font-weight: 700; font-size: 15px; }
+  .dest-info .dd { font-size: 12.5px; color: var(--muted); margin-top: 2px; }
+  .dest-check { width: 22px; height: 22px; border-radius: 50%; border: 2px solid var(--line-strong); flex-shrink: 0; transition: all 0.18s; }
+  .dest-opt.sel .dest-check { border-color: var(--turquoise); background: var(--turquoise); box-shadow: inset 0 0 0 3px var(--card); }
+
+  /* VIDEO in entries */
+  .entry-video { width: 100%; max-width: 280px; border-radius: 12px; margin-top: 10px; border: 1px solid var(--line); display: block; }
+  .media-hint { font-size: 12px; color: var(--muted); margin-bottom: 14px; font-style: italic; }
+  .video-thumb { position: relative; width: 64px; height: 64px; border-radius: 10px; overflow: hidden; border: 1px solid var(--line); background: #000; display: flex; align-items: center; justify-content: center; }
+  .video-thumb video { width: 100%; height: 100%; object-fit: cover; }
+  .video-thumb .play-ic { position: absolute; color: white; font-size: 18px; pointer-events: none; text-shadow: 0 1px 4px rgba(0,0,0,0.6); }
+  .video-thumb .rm { position: absolute; top: 2px; inset-inline-end: 2px; width: 18px; height: 18px; border-radius: 50%; background: rgba(0,0,0,0.6); color: white; border: none; font-size: 12px; cursor: pointer; line-height: 1; display: flex; align-items: center; justify-content: center; z-index: 2; }
+
   .view { display: none; }
   .view.active { display: block; }
 
@@ -335,6 +363,16 @@
         <span data-i18n="tab_stats">Stats</span>
       </button>
     </div>
+    <div class="journal-toggle" id="journalToggle">
+      <button class="jt-btn active" id="jtPersonal" onclick="setJournalType('personal')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+        <span data-i18n="journal_personal">Personal</span>
+      </button>
+      <button class="jt-btn" id="jtShared" onclick="setJournalType('shared')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+        <span data-i18n="journal_shared">Shared</span>
+      </button>
+    </div>
   </header>
 
   <!-- JOURNAL VIEW -->
@@ -387,6 +425,7 @@
 <div class="toast" id="toast"></div>
 
 <input type="file" id="photoInput" accept="image/*" multiple style="display:none">
+<input type="file" id="videoInput" accept="video/*" style="display:none">
 
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script>
@@ -397,7 +436,16 @@
       tab_journal: 'Journal', tab_map: 'Map', tab_stats: 'Stats',
       locating: 'Locating…', no_location: 'No location access',
       tap_to_record: 'Tap to record', recording: 'Recording… tap to stop', start_speaking: 'Start speaking…',
-      add_tags: 'Add tags & photos', add_tags_sub: 'Tap to select what describes this moment, and optionally add photos.',
+      add_tags: 'Add tags & media', add_tags_sub: 'Tap to select what describes this moment, and optionally add photos or videos.',
+      add_video: 'Add video', media_hint: 'Videos use a lot of storage — keep them short.',
+      journal_personal: 'Personal', journal_shared: 'Shared',
+      dest_title: 'Where should this go?', dest_sub: 'Choose which journal to save this entry to.',
+      dest_personal: 'Personal only', dest_personal_d: 'Private — just for you',
+      dest_shared: 'Shared only', dest_shared_d: 'Goes to your shared journal',
+      dest_both: 'Both journals', dest_both_d: 'Personal and shared',
+      share_journal: 'Share journal', share_sub: 'Export your shared journal as a file to send to friends.',
+      viewing_personal: 'Personal journal', viewing_shared: 'Shared journal',
+      empty_shared_title: 'Shared journal is empty', empty_shared_sub: 'Entries you mark as shared will appear here',
       start_recording: 'Start recording', search_ph: 'Search entries…',
       journal: 'Journal', day_label: 'DAY',
       no_active_trip: 'No active trip', create_to_start: 'Create a trip to start',
@@ -431,7 +479,16 @@
       tab_journal: 'יומן', tab_map: 'מפה', tab_stats: 'נתונים',
       locating: 'מאתר מיקום…', no_location: 'אין גישה למיקום',
       tap_to_record: 'הקש להקלטה', recording: 'מקליט… הקש לעצור', start_speaking: 'התחל לדבר…',
-      add_tags: 'תגיות ותמונות', add_tags_sub: 'הקש כדי לבחור מה מתאר את הרגע, ואפשר להוסיף תמונות.',
+      add_tags: 'תגיות ומדיה', add_tags_sub: 'הקש כדי לבחור מה מתאר את הרגע, ואפשר להוסיף תמונות או סרטונים.',
+      add_video: 'הוסף סרטון', media_hint: 'סרטונים תופסים הרבה מקום — כדאי לשמור אותם קצרים.',
+      journal_personal: 'אישי', journal_shared: 'שיתופי',
+      dest_title: 'לאן לשמור את הרשומה?', dest_sub: 'בחר לאיזה יומן הרשומה תיכנס.',
+      dest_personal: 'אישי בלבד', dest_personal_d: 'פרטי — רק בשבילך',
+      dest_shared: 'שיתופי בלבד', dest_shared_d: 'נכנס ליומן השיתופי',
+      dest_both: 'שני היומנים', dest_both_d: 'אישי ושיתופי',
+      share_journal: 'שתף יומן', share_sub: 'ייצא את היומן השיתופי כקובץ לשליחה לחברים.',
+      viewing_personal: 'יומן אישי', viewing_shared: 'יומן שיתופי',
+      empty_shared_title: 'היומן השיתופי ריק', empty_shared_sub: 'רשומות שתסמן כשיתופיות יופיעו כאן',
       start_recording: 'התחל הקלטה', search_ph: 'חיפוש ברשומות…',
       journal: 'היומן', day_label: 'יום',
       no_active_trip: 'אין טיול פעיל', create_to_start: 'צור טיול חדש כדי להתחיל',
@@ -536,6 +593,9 @@
   let recordStartTime = 0, timerInterval = null;
   let sessionCategories = [];
   let sessionPhotos = []; // {id, dataUrl}
+  let sessionVideos = []; // {id, dataUrl}
+  let journalType = 'personal'; // current view filter
+  let pendingEntryText = null; // holds text while choosing destination
   let searchQuery = '';
   let activeFilter = null;
   let currentView = 'journal';
@@ -639,8 +699,8 @@
     $('recordLabel').textContent=t('tap_to_record'); $('liveTranscript').style.display='none';
     if (recognition){ try{ recognition.stop(); }catch(e){} recognition=null; }
     const text=(finalTranscript+' '+interimTranscript).trim();
-    if (savePresent && (text || sessionPhotos.length)) await saveEntry(text);
-    else { if (savePresent && !text) toast(t('no_text')); sessionCategories=[]; sessionPhotos=[]; }
+    if (savePresent && (text || sessionPhotos.length || sessionVideos.length)){ pendingEntryText = text; openDestinationModal(); }
+    else { if (savePresent && !text) toast(t('no_text')); sessionCategories=[]; sessionPhotos=[]; sessionVideos=[]; }
     finalTranscript=''; interimTranscript='';
   }
 
@@ -675,29 +735,46 @@
     e.target.value = '';
     if (photoTargetRender) photoTargetRender();
   });
+  $('videoInput').addEventListener('change', async e => {
+    const f = (e.target.files||[])[0];
+    if (f){
+      // store video as data URL (kept short by the storage warning)
+      const reader = new FileReader();
+      await new Promise(res => { reader.onload = ev => { sessionVideos.push({ id: uid(), dataUrl: ev.target.result }); res(); }; reader.onerror = () => res(); reader.readAsDataURL(f); });
+    }
+    e.target.value = '';
+    if (photoTargetRender) photoTargetRender();
+  });
   function renderPhotoRow(containerId){
     const c = $(containerId); if (!c) return;
-    c.innerHTML = sessionPhotos.map((p,i)=>`
-      <div class="photo-thumb"><img src="${p.dataUrl}"><button class="rm" onclick="removeSessionPhoto(${i})">×</button></div>
-    `).join('') + `<button class="photo-add-btn" onclick="document.getElementById('photoInput').click()">+</button>`;
+    const photos = sessionPhotos.map((p,i)=>`<div class="photo-thumb"><img src="${p.dataUrl}"><button class="rm" onclick="removeSessionPhoto(${i})">×</button></div>`).join('');
+    const videos = sessionVideos.map((v,i)=>`<div class="video-thumb"><video src="${v.dataUrl}" muted></video><span class="play-ic">▶</span><button class="rm" onclick="removeSessionVideo(${i})">×</button></div>`).join('');
+    c.innerHTML = photos + videos
+      + `<button class="photo-add-btn" title="photo" onclick="document.getElementById('photoInput').click()">+</button>`
+      + `<button class="photo-add-btn" title="video" onclick="document.getElementById('videoInput').click()">🎬</button>`;
   }
   function removeSessionPhoto(i){ sessionPhotos.splice(i,1); if (photoTargetRender) photoTargetRender(); }
+  function removeSessionVideo(i){ sessionVideos.splice(i,1); if (photoTargetRender) photoTargetRender(); }
 
   // ============ ENTRY CRUD ============
-  async function saveEntry(text){
+  async function saveEntry(text, journals){
     if (!state.currentTripId){ toast(t('need_trip')); return; }
     const photoIds = [];
     for (const p of sessionPhotos){ await photoDB.put(p.id, p.dataUrl); photoIds.push(p.id); }
+    const videoIds = [];
+    for (const v of sessionVideos){ await photoDB.put(v.id, v.dataUrl); videoIds.push(v.id); }
     const entry = { id: uid(), tripId: state.currentTripId, timestamp: Date.now(), text,
-      location: currentLocation ? {...currentLocation} : null, categories: [...sessionCategories], photos: photoIds };
+      location: currentLocation ? {...currentLocation} : null, categories: [...sessionCategories],
+      photos: photoIds, videos: videoIds, journals: journals || ['personal'] };
     state.entries.unshift(entry);
-    sessionCategories=[]; sessionPhotos=[];
+    sessionCategories=[]; sessionPhotos=[]; sessionVideos=[];
     await save(); renderAll(); toast(t('saved'));
   }
   async function deleteEntry(id){
     if (!confirm(t('del_entry_confirm'))) return;
     const e = state.entries.find(x=>x.id===id);
     if (e && e.photos) for (const pid of e.photos) await photoDB.del(pid);
+    if (e && e.videos) for (const vid of e.videos) await photoDB.del(vid);
     state.entries = state.entries.filter(x=>x.id!==id);
     await save(); renderAll(); toast(t('deleted'));
   }
@@ -728,7 +805,7 @@
     const trip=state.trips.find(tr=>tr.id===id); if(!trip) return;
     const tripEntries = state.entries.filter(e=>e.tripId===id);
     if (!confirm(t('del_trip_confirm',{name:trip.name,count:tripEntries.length}))) return;
-    for (const e of tripEntries){ if (e.photos) for (const pid of e.photos) await photoDB.del(pid); }
+    for (const e of tripEntries){ if (e.photos) for (const pid of e.photos) await photoDB.del(pid); if (e.videos) for (const vid of e.videos) await photoDB.del(vid); }
     state.trips=state.trips.filter(tr=>tr.id!==id);
     state.entries=state.entries.filter(e=>e.tripId!==id);
     if (state.currentTripId===id) state.currentTripId=state.trips[0]?.id||null;
@@ -737,7 +814,10 @@
 
   // ============ FILTERS ============
   function currentTripEntries(){
-    return state.entries.filter(e=>e.tripId===state.currentTripId).sort((a,b)=>b.timestamp-a.timestamp);
+    return state.entries
+      .filter(e=>e.tripId===state.currentTripId)
+      .filter(e=>{ const j = e.journals || ['personal']; return j.includes(journalType); })
+      .sort((a,b)=>b.timestamp-a.timestamp);
   }
   function filteredEntries(){
     let list = currentTripEntries();
@@ -790,9 +870,11 @@
     const all = currentTripEntries();
     if (all.length === 0){
       $('searchBar').style.display='none'; $('filterScroll').style.display='none';
-      feed.innerHTML = `<div class="feed-header"><h2>${escapeHtml(t('journal'))}</h2><span class="count">0</span></div>
+      const eTitle = journalType==='shared' ? t('empty_shared_title') : t('empty_title');
+      const eSub = journalType==='shared' ? t('empty_shared_sub') : t('empty_sub');
+      feed.innerHTML = `<div class="feed-header"><h2>${escapeHtml(journalType==='shared'?t('viewing_shared'):t('viewing_personal'))}</h2><span class="count">0</span></div>
         <div class="empty-state"><div class="empty-state-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/></svg></div>
-        <h3>${escapeHtml(t('empty_title'))}</h3><p>${escapeHtml(t('empty_sub'))}</p></div>`;
+        <h3>${escapeHtml(eTitle)}</h3><p>${escapeHtml(eSub)}</p></div>`;
       return;
     }
     $('searchBar').style.display='block';
@@ -825,9 +907,10 @@
         const eLoc = e.location ? [e.location.city,e.location.country].filter(Boolean).join(', ') : '';
         const tagsHtml = (e.categories&&e.categories.length) ? '<div class="entry-tags">'+e.categories.map(cid=>{const c=catById(cid); if(!c)return ''; return `<span class="entry-tag" style="--tag-color:${c.color};--tag-tint:${c.color}14;--tag-border:${c.color}40"><span class="e">${c.emoji}</span> ${escapeHtml(c[lang]||c.en)}</span>`;}).join('')+'</div>' : '';
         const photoHtml = (e.photos&&e.photos.length) ? `<div class="entry-photos" data-photos="${e.id}"></div>` : '';
+        const videoHtml = (e.videos&&e.videos.length) ? `<div class="entry-videos" data-videos="${e.id}"></div>` : '';
         html += `<div class="entry" data-id="${e.id}" onclick="this.classList.toggle('open')">
           <div class="entry-head"><span class="entry-time mono">${fmtTime(tm)}</span>${eLoc?`<span class="entry-loc">${escapeHtml(eLoc)}</span>`:''}</div>
-          ${tagsHtml}<div class="entry-text">${escapeHtml(e.text)}</div>${photoHtml}
+          ${tagsHtml}<div class="entry-text">${escapeHtml(e.text)}</div>${photoHtml}${videoHtml}
           <div class="entry-actions">
             <button class="entry-action" onclick="event.stopPropagation();editEntry('${e.id}')">${escapeHtml(t('edit'))}</button>
             <button class="entry-action" onclick="event.stopPropagation();addPhotoToEntry('${e.id}')">${escapeHtml(t('add_photo'))}</button>
@@ -840,8 +923,12 @@
     // lazy-load photos from IndexedDB
     entries.forEach(async e => {
       if (e.photos && e.photos.length){
-        const c = feed.querySelector(`[data-photos="${e.id}"]`); if (!c) return;
-        for (const pid of e.photos){ const url = await photoDB.get(pid); if (url){ const img=document.createElement('img'); img.className='entry-photo'; img.src=url; img.onclick=ev=>{ev.stopPropagation();openLightbox(url);}; c.appendChild(img); } }
+        const c = feed.querySelector(`[data-photos="${e.id}"]`);
+        if (c){ for (const pid of e.photos){ const url = await photoDB.get(pid); if (url){ const img=document.createElement('img'); img.className='entry-photo'; img.src=url; img.onclick=ev=>{ev.stopPropagation();openLightbox(url);}; c.appendChild(img); } } }
+      }
+      if (e.videos && e.videos.length){
+        const cv = feed.querySelector(`[data-videos="${e.id}"]`);
+        if (cv){ for (const vid of e.videos){ const url = await photoDB.get(vid); if (url){ const v=document.createElement('video'); v.className='entry-video'; v.src=url; v.controls=true; v.playsInline=true; v.onclick=ev=>ev.stopPropagation(); cv.appendChild(v); } } }
       }
     });
   }
@@ -950,13 +1037,40 @@
   function openModal(html){ $('modalContent').innerHTML=html; $('modalBackdrop').classList.add('open'); }
   function closeModal(){ $('modalBackdrop').classList.remove('open'); photoTargetRender=null; }
 
+  function openDestinationModal(){
+    const ico = {
+      personal: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>',
+      shared: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/></svg>',
+      both: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><path d="M22 4 12 14.01l-3-3"/></svg>'
+    };
+    openModal(`<h2>${escapeHtml(t('dest_title'))}</h2><p class="subtitle">${escapeHtml(t('dest_sub'))}</p>
+      <div class="dest-opt" data-d="personal" onclick="chooseDestination('personal')"><div class="dest-ic">${ico.personal}</div><div class="dest-info"><div class="tt">${escapeHtml(t('dest_personal'))}</div><div class="dd">${escapeHtml(t('dest_personal_d'))}</div></div><div class="dest-check"></div></div>
+      <div class="dest-opt" data-d="shared" onclick="chooseDestination('shared')"><div class="dest-ic">${ico.shared}</div><div class="dest-info"><div class="tt">${escapeHtml(t('dest_shared'))}</div><div class="dd">${escapeHtml(t('dest_shared_d'))}</div></div><div class="dest-check"></div></div>
+      <div class="dest-opt" data-d="both" onclick="chooseDestination('both')"><div class="dest-ic">${ico.both}</div><div class="dest-info"><div class="tt">${escapeHtml(t('dest_both'))}</div><div class="dd">${escapeHtml(t('dest_both_d'))}</div></div><div class="dest-check"></div></div>`);
+  }
+  async function chooseDestination(which){
+    const journals = which==='both' ? ['personal','shared'] : [which];
+    const text = pendingEntryText || '';
+    pendingEntryText = null;
+    closeModal();
+    await saveEntry(text, journals);
+  }
+  function setJournalType(type){
+    journalType = type;
+    $('jtPersonal').classList.toggle('active', type==='personal');
+    $('jtShared').classList.toggle('active', type==='shared');
+    activeFilter = null; searchQuery=''; if ($('searchInput')) $('searchInput').value='';
+    renderAll();
+  }
+
   function openCategoryModal(){
-    sessionCategories=[]; sessionPhotos=[];
+    sessionCategories=[]; sessionPhotos=[]; sessionVideos=[];
     const chips = CATEGORIES.map(c=>{ const label=c[lang]||c.en;
       return `<button class="cat-chip" data-cat="${c.id}" style="--cat-color:${c.color};--cat-tint:${c.color}1f;--cat-shadow:${c.color}66" onclick="toggleCategory(this,'${c.id}')"><span class="cat-emoji">${c.emoji}</span><span class="cat-label">${escapeHtml(label)}</span></button>`;
     }).join('');
     openModal(`<h2>${escapeHtml(t('add_tags'))}</h2><p class="subtitle">${escapeHtml(t('add_tags_sub'))}</p>
       <div class="cat-grid">${chips}</div>
+      <p class="media-hint">${escapeHtml(t('media_hint'))}</p>
       <div class="photo-add-row" id="catPhotoRow"></div>
       <button class="btn" onclick="confirmCategoriesAndRecord()"><span>${escapeHtml(t('start_recording'))}</span><span class="cat-counter" id="catCounter" style="display:none">0</span></button>
       <button class="btn secondary" style="margin-top:10px" onclick="closeModal()">${escapeHtml(t('cancel'))}</button>`);
@@ -997,6 +1111,7 @@
   function openManualEntry(){
     openModal(`<h2>${escapeHtml(t('manual_title'))}</h2><p class="subtitle">${escapeHtml(t('manual_sub'))}</p>
       <div class="form-group"><textarea class="manual-input" id="manualText" placeholder="${escapeHtml(t('write_placeholder'))}"></textarea></div>
+      <p class="media-hint">${escapeHtml(t('media_hint'))}</p>
       <div class="photo-add-row" id="manualPhotoRow"></div>
       <button class="btn" onclick="submitManual()">${escapeHtml(t('save'))}</button>
       <button class="btn secondary" style="margin-top:10px" onclick="closeModal()">${escapeHtml(t('cancel'))}</button>`);
@@ -1005,8 +1120,8 @@
   }
   async function submitManual(){
     const text=$('manualText').value.trim();
-    if(!text && !sessionPhotos.length){toast(t('need_text'));return;}
-    await saveEntry(text); closeModal();
+    if(!text && !sessionPhotos.length && !sessionVideos.length){toast(t('need_text'));return;}
+    pendingEntryText = text; closeModal(); setTimeout(()=>openDestinationModal(), 260);
   }
 
   // ============ EXPORT ============
@@ -1039,7 +1154,8 @@
   // expose
   Object.assign(window, { openNewTripModal, submitNewTrip, closeModal, selectTrip, deleteTrip, deleteEntry, editEntry,
     addPhotoToEntry, openManualEntry, submitManual, openCategoryModal, toggleCategory, confirmCategoriesAndRecord,
-    removeSessionPhoto, toggleFilter, openLightbox, exportTxt });
+    removeSessionPhoto, removeSessionVideo, toggleFilter, openLightbox, exportTxt,
+    setJournalType, openDestinationModal, chooseDestination });
 
   // ============ EVENTS ============
   $('recordBtn').addEventListener('click', ()=>{ if(!state.currentTripId){openNewTripModal();return;} if(isRecording) stopRecording(true); else openCategoryModal(); });
