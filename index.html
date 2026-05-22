@@ -534,7 +534,7 @@
       origin_save: 'Save', origin_change: 'Change home country',
       em_title: 'Emergency', em_local: 'Local emergency numbers', em_in: 'in', em_unknown_country: 'Turn on location to detect your country. Showing the universal number 112.',
       em_police: 'Police', em_ambulance: 'Ambulance', em_fire: 'Fire', em_universal: 'Universal (EU & many countries)',
-      em_embassy: 'Your embassy', em_embassy_btn: 'Find {origin} embassy in {country}', em_embassy_generic: 'Find your embassy nearby',
+      em_embassy: 'Your embassy', em_embassy_btn: 'Find {origin} embassy in {country}', em_embassy_generic: 'Find your embassy nearby', em_foreign_ministry: '{origin} foreign ministry — help abroad',
       em_home_lines: 'Home country hotlines', em_call: 'Call', em_disclaimer: 'Numbers are provided for convenience and may change. In a real emergency, local signs and hotel/airport staff are the most reliable source. This app is not a substitute for official emergency services.',
       em_set_origin: 'Set your home country to see your embassy', tap_to_call: 'Tap a number to call',
       del_entry_confirm: 'Delete this entry?', del_trip_confirm: 'Delete trip "{name}" and all {count} entries?',
@@ -590,7 +590,7 @@
       origin_save: 'שמור', origin_change: 'שנה ארץ מוצא',
       em_title: 'חירום', em_local: 'מספרי חירום מקומיים', em_in: 'ב', em_unknown_country: 'הפעל מיקום כדי לזהות את המדינה. בינתיים מוצג המספר האוניברסלי 112.',
       em_police: 'משטרה', em_ambulance: 'אמבולנס', em_fire: 'כיבוי אש', em_universal: 'אוניברסלי (אירופה ומדינות רבות)',
-      em_embassy: 'השגרירות שלך', em_embassy_btn: 'מצא שגרירות {origin} ב-{country}', em_embassy_generic: 'מצא את השגרירות שלך בקרבת מקום',
+      em_embassy: 'השגרירות שלך', em_embassy_btn: 'מצא שגרירות {origin} ב-{country}', em_embassy_generic: 'מצא את השגרירות שלך בקרבת מקום', em_foreign_ministry: 'משרד החוץ של {origin} — סיוע בחו"ל',
       em_home_lines: 'קווי חירום בארץ המוצא', em_call: 'התקשר', em_disclaimer: 'המספרים מובאים לנוחות בלבד ועשויים להשתנות. במצב חירום אמיתי, שילוט מקומי וצוות המלון/שדה התעופה הם המקור האמין ביותר. האפליקציה אינה תחליף לשירותי החירום הרשמיים.',
       em_set_origin: 'בחר ארץ מוצא כדי לראות את השגרירות שלך', tap_to_call: 'הקש על מספר כדי להתקשר',
       del_entry_confirm: 'למחוק את הרשומה?', del_trip_confirm: 'למחוק את הטיול "{name}" ואת כל {count} הרשומות שלו?',
@@ -1659,25 +1659,29 @@ ${forPrint?'<style>@media print{@page{size:A4;margin:12mm}}<\/style>':''}
     localBlock += callRow('ambulance', '🚑', 'em_ambulance', nums.ambulance);
     localBlock += callRow('fire', '🚒', 'em_fire', nums.fire);
 
-    // embassy block: origin embassy in current country
-    // Skip when the user is in their own home country (no foreign embassy needed).
+    // embassy block: origin embassy in the current country.
+    // When the user is in their OWN home country, show their foreign-ministry / citizens-abroad help instead.
     const inHomeCountry = origin && code && origin.code === code;
-    let embassyBlock = '';
-    if (!inHomeCountry){
-      embassyBlock = `<div class="em-section-title">${escapeHtml(t('em_embassy'))}</div>`;
-      if (origin){
-        const originName = origin[lang]||origin.en;
+    let embassyBlock = `<div class="em-section-title">${escapeHtml(t('em_embassy'))}</div>`;
+    if (origin){
+      const originName = origin[lang]||origin.en;
+      const originEn = origin.en;
+      if (inHomeCountry){
+        // at home: link to foreign ministry / consular help (useful for relatives abroad, travel advisories)
+        const q = `${originEn} ministry of foreign affairs consular assistance`;
+        const url = `https://www.google.com/search?q=${encodeURIComponent(q)}`;
+        embassyBlock += `<a class="em-embassy-btn" href="${url}" target="_blank" rel="noopener"><span class="eb-ic">🏛️</span><span class="eb-txt">${escapeHtml(t('em_foreign_ministry', { origin: originName }))}</span><span class="eb-arrow">›</span></a>`;
+      } else {
         const label = displayCountry
           ? t('em_embassy_btn', { origin: originName, country: displayCountry })
           : t('em_embassy_generic');
-        const originEn = origin.en;
         const countryForSearch = (code && EMERGENCY_NUMBERS[code]) ? EMERGENCY_NUMBERS[code].name : rawCountry;
         const q = countryForSearch ? `${originEn} embassy in ${countryForSearch}` : `${originEn} embassy near me`;
         const url = `https://www.google.com/maps/search/${encodeURIComponent(q)}`;
         embassyBlock += `<a class="em-embassy-btn" href="${url}" target="_blank" rel="noopener"><span class="eb-ic">🏛️</span><span class="eb-txt">${escapeHtml(label)}</span><span class="eb-arrow">›</span></a>`;
-      } else {
-        embassyBlock += `<button class="em-embassy-btn" onclick="openOriginPicker(true)"><span class="eb-ic">🏛️</span><span class="eb-txt">${escapeHtml(t('em_set_origin'))}</span><span class="eb-arrow">›</span></button>`;
       }
+    } else {
+      embassyBlock += `<button class="em-embassy-btn" onclick="openOriginPicker(true)"><span class="eb-ic">🏛️</span><span class="eb-txt">${escapeHtml(t('em_set_origin'))}</span><span class="eb-arrow">›</span></button>`;
     }
 
     // origin row (change)
