@@ -337,6 +337,48 @@
     z-index: 200; transition: transform 0.3s cubic-bezier(0.2,0.8,0.2,1); box-shadow: 0 14px 36px -10px rgba(10,37,64,0.4);
     max-width: calc(100vw - 40px); text-align: center; pointer-events: none; }
   .toast.show { transform: translateX(-50%) translateY(0); }
+  /* EMERGENCY */
+  .sos-btn { background: linear-gradient(135deg,#f43f5e,#e11d48) !important; color:#fff !important; border:none !important;
+    font-weight:800 !important; box-shadow:0 4px 12px -3px rgba(244,63,94,0.55); display:flex; align-items:center; gap:5px; }
+  .sos-btn:active { transform: scale(0.96); filter:brightness(1.05); }
+  .sos-dot { width:7px; height:7px; border-radius:50%; background:#fff; position:relative; }
+  .sos-dot::after { content:""; position:absolute; inset:-3px; border-radius:50%; border:1.5px solid #fff; opacity:0.5; animation:pulse 1.8s ease-out infinite; }
+
+  .em-modal h2 { color:#e11d48; display:flex; align-items:center; gap:8px; }
+  .em-section-title { font-size:11px; text-transform:uppercase; letter-spacing:0.16em; color:var(--muted); font-weight:700; margin:22px 0 12px; }
+  .em-call { display:flex; align-items:center; gap:14px; padding:15px 16px; border-radius:16px; margin-bottom:9px;
+    text-decoration:none; border:1px solid; transition:transform 0.15s; }
+  .em-call:active { transform:scale(0.98); }
+  .em-call.police { background:rgba(59,130,246,0.10); border-color:rgba(59,130,246,0.35); }
+  .em-call.ambulance { background:rgba(244,63,94,0.10); border-color:rgba(244,63,94,0.35); }
+  .em-call.fire { background:rgba(249,115,22,0.10); border-color:rgba(249,115,22,0.35); }
+  .em-call .em-ic { width:42px; height:42px; border-radius:12px; display:flex; align-items:center; justify-content:center; font-size:22px; flex-shrink:0; color:#fff; }
+  .em-call.police .em-ic { background:#3b82f6; }
+  .em-call.ambulance .em-ic { background:#f43f5e; }
+  .em-call.fire .em-ic { background:#f97316; }
+  .em-call .em-info { flex:1; min-width:0; }
+  .em-call .em-label { font-size:13px; color:var(--muted); font-weight:600; }
+  .em-call .em-num { font-size:24px; font-weight:900; color:var(--ink); letter-spacing:-0.02em; line-height:1.1; font-family:'JetBrains Mono',monospace; }
+  .em-call .em-arrow { color:var(--muted); font-size:18px; }
+  .em-country-line { font-size:14px; color:var(--ink-soft); font-weight:600; margin-bottom:4px; }
+  .em-embassy-btn { display:flex; align-items:center; gap:12px; width:100%; padding:15px 16px; border-radius:16px;
+    background:var(--card); border:1px solid var(--line); cursor:pointer; font-family:inherit; text-align:start; transition:transform 0.15s; text-decoration:none; }
+  .em-embassy-btn:active { transform:scale(0.98); }
+  .em-embassy-btn .eb-ic { width:42px; height:42px; border-radius:12px; background:var(--grad); display:flex; align-items:center; justify-content:center; font-size:21px; flex-shrink:0; }
+  .em-embassy-btn .eb-txt { flex:1; font-weight:600; font-size:14.5px; color:var(--ink); }
+  .em-embassy-btn .eb-arrow { color:var(--muted); }
+  .em-disclaimer { font-size:11.5px; color:var(--muted); line-height:1.5; margin-top:18px; padding:12px 14px; background:var(--card-soft); border:1px solid var(--line); border-radius:12px; }
+  .em-origin-row { display:flex; align-items:center; justify-content:space-between; gap:10px; padding:12px 14px; background:var(--card); border:1px solid var(--line); border-radius:12px; margin-bottom:6px; }
+  .em-origin-row .or-left { display:flex; align-items:center; gap:10px; font-weight:600; font-size:14.5px; }
+  .em-origin-row .or-left .fl { font-size:20px; }
+  .em-change { background:none; border:none; color:var(--primary); font-family:inherit; font-size:13px; font-weight:700; cursor:pointer; }
+  .country-grid { display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-bottom:18px; }
+  .country-opt { display:flex; align-items:center; gap:10px; padding:13px 14px; border:1.5px solid var(--line); border-radius:14px;
+    background:var(--card); cursor:pointer; font-family:inherit; font-size:14.5px; font-weight:600; color:var(--ink); transition:all 0.15s; }
+  .country-opt:active { transform:scale(0.97); }
+  .country-opt.sel { border-color:var(--turquoise); background:linear-gradient(135deg, rgba(34,211,238,0.08), rgba(20,184,166,0.08)); }
+  .country-opt .fl { font-size:20px; }
+
   .notice { margin: 14px 22px 0; padding: 12px 16px; background: rgba(34,211,238,0.1); border: 1px solid rgba(20,184,166,0.3);
     border-radius: 12px; font-size: 13px; color: var(--primary-deep); line-height: 1.55; font-weight: 500; }
 </style>
@@ -362,6 +404,7 @@
         <span class="logo-trip">Trip</span><span class="logo-diary">diary</span>
       </div>
       <div class="header-actions">
+        <button class="icon-btn sos-btn" id="sosBtn"><span class="sos-dot"></span><span data-i18n="sos">SOS</span></button>
         <button class="icon-btn" id="darkBtn" title="dark mode">🌙</button>
         <button class="icon-btn" id="backupBtn" title="backup">💾</button>
         <button class="icon-btn" id="exportBtn" data-i18n="export">Export</button>
@@ -486,6 +529,14 @@
       write_placeholder: 'Tell us about your day…', save: 'Save entry',
       edit: 'Edit', delete: 'Delete', add_photo: 'Add photo', listen: 'Listen', stop_listen: 'Stop',
       no_tts: 'Read-aloud not supported in this browser',
+      emergency: 'Emergency', sos: 'SOS',
+      origin_title: 'Where are you from?', origin_sub: 'Pick your home country once. In an emergency we\'ll show your embassy abroad. You can change this later in the Emergency screen.',
+      origin_save: 'Save', origin_change: 'Change home country',
+      em_title: 'Emergency', em_local: 'Local emergency numbers', em_in: 'in', em_unknown_country: 'Turn on location to detect your country. Showing the universal number 112.',
+      em_police: 'Police', em_ambulance: 'Ambulance', em_fire: 'Fire', em_universal: 'Universal (EU & many countries)',
+      em_embassy: 'Your embassy', em_embassy_btn: 'Find {origin} embassy in {country}', em_embassy_generic: 'Find your embassy nearby',
+      em_home_lines: 'Home country hotlines', em_call: 'Call', em_disclaimer: 'Numbers are provided for convenience and may change. In a real emergency, local signs and hotel/airport staff are the most reliable source. This app is not a substitute for official emergency services.',
+      em_set_origin: 'Set your home country to see your embassy', tap_to_call: 'Tap a number to call',
       del_entry_confirm: 'Delete this entry?', del_trip_confirm: 'Delete trip "{name}" and all {count} entries?',
       entries: 'entries', entry: 'entry', started: 'Started',
       saved: 'Entry saved', no_text: 'No text captured', need_name: 'Enter a name', need_date: 'Select a date',
@@ -534,6 +585,14 @@
       write_placeholder: 'ספר על היום…', save: 'שמור רשומה',
       edit: 'ערוך', delete: 'מחק', add_photo: 'הוסף תמונה', listen: 'הקרא', stop_listen: 'עצור',
       no_tts: 'הקראה לא נתמכת בדפדפן הזה',
+      emergency: 'חירום', sos: 'חירום',
+      origin_title: 'מאיפה אתה?', origin_sub: 'בחר את ארץ המוצא שלך פעם אחת. במצב חירום נציג לך את השגרירות שלך בחו\"ל. אפשר לשנות בהמשך במסך החירום.',
+      origin_save: 'שמור', origin_change: 'שנה ארץ מוצא',
+      em_title: 'חירום', em_local: 'מספרי חירום מקומיים', em_in: 'ב', em_unknown_country: 'הפעל מיקום כדי לזהות את המדינה. בינתיים מוצג המספר האוניברסלי 112.',
+      em_police: 'משטרה', em_ambulance: 'אמבולנס', em_fire: 'כיבוי אש', em_universal: 'אוניברסלי (אירופה ומדינות רבות)',
+      em_embassy: 'השגרירות שלך', em_embassy_btn: 'מצא שגרירות {origin} ב-{country}', em_embassy_generic: 'מצא את השגרירות שלך בקרבת מקום',
+      em_home_lines: 'קווי חירום בארץ המוצא', em_call: 'התקשר', em_disclaimer: 'המספרים מובאים לנוחות בלבד ועשויים להשתנות. במצב חירום אמיתי, שילוט מקומי וצוות המלון/שדה התעופה הם המקור האמין ביותר. האפליקציה אינה תחליף לשירותי החירום הרשמיים.',
+      em_set_origin: 'בחר ארץ מוצא כדי לראות את השגרירות שלך', tap_to_call: 'הקש על מספר כדי להתקשר',
       del_entry_confirm: 'למחוק את הרשומה?', del_trip_confirm: 'למחוק את הטיול "{name}" ואת כל {count} הרשומות שלו?',
       entries: 'רשומות', entry: 'רשומה', started: 'החל ב-',
       saved: 'רשומה נשמרה', no_text: 'לא נקלט טקסט', need_name: 'הזן שם', need_date: 'בחר תאריך',
@@ -579,6 +638,67 @@
     { id:'soul',    emoji:'✨', en:'Soul',    he:'נפש',    color:'#a855f7' }
   ];
   const catById = id => CATEGORIES.find(c => c.id === id);
+
+  // ============ EMERGENCY DATA ============
+  // Origin countries the user can pick (citizenship / home). Extendable.
+  const ORIGIN_COUNTRIES = [
+    { code:'IL', en:'Israel', he:'ישראל', flag:'🇮🇱' },
+    { code:'US', en:'United States', he:'ארצות הברית', flag:'🇺🇸' },
+    { code:'GB', en:'United Kingdom', he:'בריטניה', flag:'🇬🇧' },
+    { code:'CA', en:'Canada', he:'קנדה', flag:'🇨🇦' },
+    { code:'AU', en:'Australia', he:'אוסטרליה', flag:'🇦🇺' },
+    { code:'DE', en:'Germany', he:'גרמניה', flag:'🇩🇪' },
+    { code:'FR', en:'France', he:'צרפת', flag:'🇫🇷' },
+    { code:'IT', en:'Italy', he:'איטליה', flag:'🇮🇹' },
+    { code:'ES', en:'Spain', he:'ספרד', flag:'🇪🇸' },
+    { code:'NL', en:'Netherlands', he:'הולנד', flag:'🇳🇱' },
+    { code:'RU', en:'Russia', he:'רוסיה', flag:'🇷🇺' },
+    { code:'BR', en:'Brazil', he:'ברזיל', flag:'🇧🇷' },
+    { code:'IN', en:'India', he:'הודו', flag:'🇮🇳' },
+    { code:'CN', en:'China', he:'סין', flag:'🇨🇳' },
+    { code:'JP', en:'Japan', he:'יפן', flag:'🇯🇵' },
+    { code:'OTHER', en:'Other', he:'אחר', flag:'🌍' }
+  ];
+  const originByCode = c => ORIGIN_COUNTRIES.find(o=>o.code===c);
+
+  // Local emergency numbers keyed by country NAME (as returned by reverse-geocode, English).
+  // Falls back to a sensible default when a country isn't in the table.
+  // Each: police / ambulance / fire. Many countries use a single number (e.g. 112 / 911).
+  const EMERGENCY_NUMBERS = {
+    'Israel':        { police:'100', ambulance:'101', fire:'102' },
+    'United States': { police:'911', ambulance:'911', fire:'911' },
+    'Canada':        { police:'911', ambulance:'911', fire:'911' },
+    'United Kingdom':{ police:'999', ambulance:'999', fire:'999', alt:'112' },
+    'Australia':     { police:'000', ambulance:'000', fire:'000' },
+    'Thailand':      { police:'191', ambulance:'1669', fire:'199', alt:'112' },
+    'Vietnam':       { police:'113', ambulance:'115', fire:'114' },
+    'India':         { police:'112', ambulance:'102', fire:'101' },
+    'Japan':         { police:'110', ambulance:'119', fire:'119' },
+    'China':         { police:'110', ambulance:'120', fire:'119' },
+    'Germany':       { police:'110', ambulance:'112', fire:'112' },
+    'France':        { police:'17', ambulance:'15', fire:'18', alt:'112' },
+    'Italy':         { police:'113', ambulance:'118', fire:'115', alt:'112' },
+    'Spain':         { police:'091', ambulance:'061', fire:'080', alt:'112' },
+    'Netherlands':   { police:'112', ambulance:'112', fire:'112' },
+    'Greece':        { police:'100', ambulance:'166', fire:'199', alt:'112' },
+    'Brazil':        { police:'190', ambulance:'192', fire:'193' },
+    'Mexico':        { police:'911', ambulance:'911', fire:'911' },
+    'Argentina':     { police:'911', ambulance:'107', fire:'100' },
+    'Peru':          { police:'105', ambulance:'106', fire:'116' },
+    'Indonesia':     { police:'110', ambulance:'118', fire:'113', alt:'112' },
+    'Philippines':   { police:'911', ambulance:'911', fire:'911' },
+    'Cambodia':      { police:'117', ambulance:'119', fire:'118' },
+    'Laos':          { police:'191', ambulance:'195', fire:'190' },
+    'Nepal':         { police:'100', ambulance:'102', fire:'101' },
+    'Sri Lanka':     { police:'119', ambulance:'1990', fire:'110' },
+    'Turkey':        { police:'155', ambulance:'112', fire:'110', alt:'112' },
+    'Portugal':      { police:'112', ambulance:'112', fire:'112' },
+    'New Zealand':   { police:'111', ambulance:'111', fire:'111' },
+    'South Africa':  { police:'10111', ambulance:'10177', fire:'10177' }
+  };
+  // Pan-EU + many others accept 112 as a universal fallback.
+  const DEFAULT_EMERGENCY = { police:'112', ambulance:'112', fire:'112' };
+
 
   // ============ STORAGE (data) ============
   const store = {
@@ -637,6 +757,8 @@
   let currentView = 'journal';
   let groupMode = 'days';
   let theme = 'light';
+  let originCountry = null; // ISO code of user's home country
+  let originOnboarded = false;
   let mapInstance = null, mapLayer = null;
 
   const $ = id => document.getElementById(id);
@@ -678,6 +800,8 @@
     const sl = await store.get('lang');
     if (sl==='he'||sl==='en') lang = sl;
     const th = await store.get('theme'); if (th==='dark'||th==='light') theme = th;
+    const oc = await store.get('originCountry'); if (oc) originCountry = oc;
+    const ob = await store.get('originOnboarded'); originOnboarded = ob==='1';
   }
   async function save(){ await store.set('travel-journal-data', JSON.stringify(state)); }
 
@@ -1451,12 +1575,87 @@ ${forPrint?'<style>@media print{@page{size:A4;margin:12mm}}<\/style>':''}
     await save(); renderAll(); closeModal(); toast(t('saved'));
   }
 
+  // ============ EMERGENCY ============
+  function emergencyNumbersForCountry(countryName){
+    if (countryName && EMERGENCY_NUMBERS[countryName]) return { nums: EMERGENCY_NUMBERS[countryName], known:true };
+    return { nums: DEFAULT_EMERGENCY, known:false };
+  }
+  function telLink(num){ return 'tel:' + String(num).replace(/[^0-9+]/g,''); }
+
+  function openOriginPicker(fromEmergency){
+    const opts = ORIGIN_COUNTRIES.map(o=>{
+      const sel = originCountry===o.code;
+      return `<button class="country-opt ${sel?'sel':''}" onclick="chooseOrigin('${o.code}', ${fromEmergency?'true':'false'})"><span class="fl">${o.flag}</span><span>${escapeHtml(o[lang]||o.en)}</span></button>`;
+    }).join('');
+    openModal(`<h2>${escapeHtml(t('origin_title'))}</h2><p class="subtitle">${escapeHtml(t('origin_sub'))}</p>
+      <div class="country-grid">${opts}</div>
+      <button class="btn secondary" onclick="closeModal()">${escapeHtml(t('cancel'))}</button>`);
+  }
+  async function chooseOrigin(code, fromEmergency){
+    originCountry = code; originOnboarded = true;
+    await store.set('originCountry', code); await store.set('originOnboarded', '1');
+    if (fromEmergency) openEmergency(); else closeModal();
+  }
+
+  function openEmergency(){
+    const countryName = (currentLocation && currentLocation.country) ? currentLocation.country : null;
+    const { nums, known } = emergencyNumbersForCountry(countryName);
+    const origin = originCountry ? originByCode(originCountry) : null;
+
+    const callRow = (cls, icon, labelKey, num) => `
+      <a class="em-call ${cls}" href="${telLink(num)}">
+        <span class="em-ic">${icon}</span>
+        <span class="em-info"><span class="em-label">${escapeHtml(t(labelKey))}</span><span class="em-num">${escapeHtml(num)}</span></span>
+        <span class="em-arrow">›</span>
+      </a>`;
+
+    // local emergency block
+    let localBlock = '';
+    const inCountry = countryName ? `${t('em_in')} ${escapeHtml(countryName)}` : '';
+    localBlock += `<div class="em-section-title">${escapeHtml(t('em_local'))} ${inCountry}</div>`;
+    if (!known) localBlock += `<p class="subtitle" style="margin-top:-4px">${escapeHtml(t('em_unknown_country'))}</p>`;
+    localBlock += callRow('police', '🚓', 'em_police', nums.police);
+    localBlock += callRow('ambulance', '🚑', 'em_ambulance', nums.ambulance);
+    localBlock += callRow('fire', '🚒', 'em_fire', nums.fire);
+
+    // embassy block: origin embassy in current country
+    let embassyBlock = `<div class="em-section-title">${escapeHtml(t('em_embassy'))}</div>`;
+    if (origin){
+      const originName = origin[lang]||origin.en;
+      const label = countryName
+        ? t('em_embassy_btn', { origin: originName, country: countryName })
+        : t('em_embassy_generic');
+      // Build a maps/search query in English for reliability
+      const originEn = origin.en;
+      const q = countryName ? `${originEn} embassy in ${countryName}` : `${originEn} embassy near me`;
+      const url = `https://www.google.com/maps/search/${encodeURIComponent(q)}`;
+      embassyBlock += `<a class="em-embassy-btn" href="${url}" target="_blank" rel="noopener"><span class="eb-ic">🏛️</span><span class="eb-txt">${escapeHtml(label)}</span><span class="eb-arrow">›</span></a>`;
+    } else {
+      embassyBlock += `<button class="em-embassy-btn" onclick="openOriginPicker(true)"><span class="eb-ic">🏛️</span><span class="eb-txt">${escapeHtml(t('em_set_origin'))}</span><span class="eb-arrow">›</span></button>`;
+    }
+
+    // origin row (change)
+    let originRow = '';
+    if (origin){
+      originRow = `<div class="em-origin-row"><span class="or-left"><span class="fl">${origin.flag}</span>${escapeHtml(origin[lang]||origin.en)}</span><button class="em-change" onclick="openOriginPicker(true)">${escapeHtml(t('origin_change'))}</button></div>`;
+    }
+
+    openModal(`<div class="em-modal"><h2>🆘 ${escapeHtml(t('em_title'))}</h2>
+      <p class="subtitle" style="margin-bottom:6px">${escapeHtml(t('tap_to_call'))}</p>
+      ${localBlock}
+      ${embassyBlock}
+      ${originRow}
+      <div class="em-disclaimer">${escapeHtml(t('em_disclaimer'))}</div>
+      <button class="btn secondary" style="margin-top:14px" onclick="closeModal()">${escapeHtml(t('close'))}</button></div>`);
+  }
+
   // expose
   Object.assign(window, { openNewTripModal, submitNewTrip, closeModal, selectTrip, deleteTrip, deleteEntry, editEntry,
     addPhotoToEntry, openManualEntry, submitManual, openCategoryModal, toggleCategory, confirmCategoriesAndRecord,
     removeSessionPhoto, removeSessionVideo, toggleFilter, openLightbox, exportHtml, exportPdf, buildExportDoc,
     setJournalType, openDestinationModal, chooseDestination, toggleSpeak,
-    toggleTheme, setGroupMode, downloadBackup, startRestore, openBackup, openEditTags, toggleEditCat, toggleEditJournal, saveEditTags });
+    toggleTheme, setGroupMode, downloadBackup, startRestore, openBackup, openEditTags, toggleEditCat, toggleEditJournal, saveEditTags,
+    openEmergency, openOriginPicker, chooseOrigin });
 
   // ============ EVENTS ============
   $('recordBtn').addEventListener('click', ()=>{ haptic(isRecording?[20]:15); if(!state.currentTripId){openNewTripModal();return;} if(isRecording) stopRecording(true); else openCategoryModal(); });
@@ -1464,6 +1663,7 @@ ${forPrint?'<style>@media print{@page{size:A4;margin:12mm}}<\/style>':''}
   $('exportBtn').addEventListener('click', openExport);
   $('darkBtn').addEventListener('click', toggleTheme);
   $('backupBtn').addEventListener('click', openBackup);
+  $('sosBtn').addEventListener('click', openEmergency);
   $('langBtn').addEventListener('click', ()=>setLang(lang==='he'?'en':'he'));
   $('modalBackdrop').addEventListener('click', closeModal);
   $('searchInput').addEventListener('input', e=>{ searchQuery=e.target.value; renderFeed(); });
@@ -1512,6 +1712,7 @@ ${forPrint?'<style>@media print{@page{size:A4;margin:12mm}}<\/style>':''}
     if (!SR){ const n=document.createElement('div'); n.className='notice'; n.textContent=t('no_speech_notice'); document.querySelector('header').after(n); }
     setTimeout(()=>$('splash').classList.add('hidden'), 1800);
     registerOfflineSW();
+    if (!originOnboarded){ setTimeout(()=>{ if(!originOnboarded) openOriginPicker(false); }, 2600); }
   })();
 </script>
 </body>
