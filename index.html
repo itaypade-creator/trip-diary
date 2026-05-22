@@ -661,43 +661,69 @@
   ];
   const originByCode = c => ORIGIN_COUNTRIES.find(o=>o.code===c);
 
-  // Local emergency numbers keyed by country NAME (as returned by reverse-geocode, English).
-  // Falls back to a sensible default when a country isn't in the table.
-  // Each: police / ambulance / fire. Many countries use a single number (e.g. 112 / 911).
+  // Local emergency numbers keyed by ISO country code (language-independent).
+  // Each: police / ambulance / fire. Some countries use a single number (e.g. 112 / 911).
   const EMERGENCY_NUMBERS = {
-    'Israel':        { police:'100', ambulance:'101', fire:'102' },
-    'United States': { police:'911', ambulance:'911', fire:'911' },
-    'Canada':        { police:'911', ambulance:'911', fire:'911' },
-    'United Kingdom':{ police:'999', ambulance:'999', fire:'999', alt:'112' },
-    'Australia':     { police:'000', ambulance:'000', fire:'000' },
-    'Thailand':      { police:'191', ambulance:'1669', fire:'199', alt:'112' },
-    'Vietnam':       { police:'113', ambulance:'115', fire:'114' },
-    'India':         { police:'112', ambulance:'102', fire:'101' },
-    'Japan':         { police:'110', ambulance:'119', fire:'119' },
-    'China':         { police:'110', ambulance:'120', fire:'119' },
-    'Germany':       { police:'110', ambulance:'112', fire:'112' },
-    'France':        { police:'17', ambulance:'15', fire:'18', alt:'112' },
-    'Italy':         { police:'113', ambulance:'118', fire:'115', alt:'112' },
-    'Spain':         { police:'091', ambulance:'061', fire:'080', alt:'112' },
-    'Netherlands':   { police:'112', ambulance:'112', fire:'112' },
-    'Greece':        { police:'100', ambulance:'166', fire:'199', alt:'112' },
-    'Brazil':        { police:'190', ambulance:'192', fire:'193' },
-    'Mexico':        { police:'911', ambulance:'911', fire:'911' },
-    'Argentina':     { police:'911', ambulance:'107', fire:'100' },
-    'Peru':          { police:'105', ambulance:'106', fire:'116' },
-    'Indonesia':     { police:'110', ambulance:'118', fire:'113', alt:'112' },
-    'Philippines':   { police:'911', ambulance:'911', fire:'911' },
-    'Cambodia':      { police:'117', ambulance:'119', fire:'118' },
-    'Laos':          { police:'191', ambulance:'195', fire:'190' },
-    'Nepal':         { police:'100', ambulance:'102', fire:'101' },
-    'Sri Lanka':     { police:'119', ambulance:'1990', fire:'110' },
-    'Turkey':        { police:'155', ambulance:'112', fire:'110', alt:'112' },
-    'Portugal':      { police:'112', ambulance:'112', fire:'112' },
-    'New Zealand':   { police:'111', ambulance:'111', fire:'111' },
-    'South Africa':  { police:'10111', ambulance:'10177', fire:'10177' }
+    'IL': { name:'Israel',         police:'100', ambulance:'101',  fire:'102' },
+    'US': { name:'United States',  police:'911', ambulance:'911',  fire:'911' },
+    'CA': { name:'Canada',         police:'911', ambulance:'911',  fire:'911' },
+    'GB': { name:'United Kingdom', police:'999', ambulance:'999',  fire:'999', alt:'112' },
+    'AU': { name:'Australia',      police:'000', ambulance:'000',  fire:'000' },
+    'TH': { name:'Thailand',       police:'191', ambulance:'1669', fire:'199', alt:'112' },
+    'VN': { name:'Vietnam',        police:'113', ambulance:'115',  fire:'114' },
+    'IN': { name:'India',          police:'112', ambulance:'102',  fire:'101' },
+    'JP': { name:'Japan',          police:'110', ambulance:'119',  fire:'119' },
+    'CN': { name:'China',          police:'110', ambulance:'120',  fire:'119' },
+    'DE': { name:'Germany',        police:'110', ambulance:'112',  fire:'112' },
+    'FR': { name:'France',         police:'17',  ambulance:'15',   fire:'18',  alt:'112' },
+    'IT': { name:'Italy',          police:'113', ambulance:'118',  fire:'115', alt:'112' },
+    'ES': { name:'Spain',          police:'091', ambulance:'061',  fire:'080', alt:'112' },
+    'NL': { name:'Netherlands',    police:'112', ambulance:'112',  fire:'112' },
+    'GR': { name:'Greece',         police:'100', ambulance:'166',  fire:'199', alt:'112' },
+    'BR': { name:'Brazil',         police:'190', ambulance:'192',  fire:'193' },
+    'MX': { name:'Mexico',         police:'911', ambulance:'911',  fire:'911' },
+    'AR': { name:'Argentina',      police:'911', ambulance:'107',  fire:'100' },
+    'PE': { name:'Peru',           police:'105', ambulance:'106',  fire:'116' },
+    'ID': { name:'Indonesia',      police:'110', ambulance:'118',  fire:'113', alt:'112' },
+    'PH': { name:'Philippines',    police:'911', ambulance:'911',  fire:'911' },
+    'KH': { name:'Cambodia',       police:'117', ambulance:'119',  fire:'118' },
+    'LA': { name:'Laos',           police:'191', ambulance:'195',  fire:'190' },
+    'NP': { name:'Nepal',          police:'100', ambulance:'102',  fire:'101' },
+    'LK': { name:'Sri Lanka',      police:'119', ambulance:'1990', fire:'110' },
+    'TR': { name:'Turkey',         police:'155', ambulance:'112',  fire:'110', alt:'112' },
+    'PT': { name:'Portugal',       police:'112', ambulance:'112',  fire:'112' },
+    'NZ': { name:'New Zealand',    police:'111', ambulance:'111',  fire:'111' },
+    'ZA': { name:'South Africa',   police:'10111', ambulance:'10177', fire:'10177' }
   };
   // Pan-EU + many others accept 112 as a universal fallback.
   const DEFAULT_EMERGENCY = { police:'112', ambulance:'112', fire:'112' };
+
+  // Reverse-geocode may return localized country names (e.g. Hebrew). Map common ones to the English keys above.
+  const COUNTRY_ALIASES = {
+    'ישראל':'Israel', 'ארצות הברית':'United States', 'ארהב':'United States', 'בריטניה':'United Kingdom',
+    'אנגליה':'United Kingdom', 'קנדה':'Canada', 'אוסטרליה':'Australia', 'תאילנד':'Thailand', 'וייטנאם':'Vietnam',
+    'הודו':'India', 'יפן':'Japan', 'סין':'China', 'גרמניה':'Germany', 'צרפת':'France', 'איטליה':'Italy',
+    'ספרד':'Spain', 'הולנד':'Netherlands', 'יוון':'Greece', 'ברזיל':'Brazil', 'מקסיקו':'Mexico',
+    'ארגנטינה':'Argentina', 'פרו':'Peru', 'אינדונזיה':'Indonesia', 'הפיליפינים':'Philippines', 'קמבודיה':'Cambodia',
+    'לאוס':'Laos', 'נפאל':'Nepal', 'סרי לנקה':'Sri Lanka', 'טורקיה':'Turkey', 'פורטוגל':'Portugal',
+    'ניו זילנד':'New Zealand', 'דרום אפריקה':'South Africa', 'רוסיה':'Russia',
+    // common English variants
+    'USA':'United States', 'US':'United States', 'UK':'United Kingdom', 'England':'United Kingdom'
+  };
+  // Map an origin ISO code to the English country name used in EMERGENCY_NUMBERS
+  const ORIGIN_CODE_TO_NAME = { IL:'Israel', US:'United States', GB:'United Kingdom', CA:'Canada', AU:'Australia',
+    DE:'Germany', FR:'France', IT:'Italy', ES:'Spain', NL:'Netherlands', RU:'Russia', BR:'Brazil', IN:'India', CN:'China', JP:'Japan' };
+
+  // Resolve any country string (English or localized) to the canonical English key, or null.
+  function canonicalCountry(name){
+    if (!name) return null;
+    if (EMERGENCY_NUMBERS[name]) return name;            // already an English key
+    if (COUNTRY_ALIASES[name]) return COUNTRY_ALIASES[name]; // localized alias
+    // try case-insensitive match on English keys
+    const lower = name.toLowerCase();
+    const hit = Object.keys(EMERGENCY_NUMBERS).find(k => k.toLowerCase() === lower);
+    return hit || null;
+  }
 
 
   // ============ STORAGE (data) ============
@@ -818,6 +844,7 @@
           const d = await r.json(); const a = d.address || {};
           currentLocation.city = a.city||a.town||a.village||a.municipality||a.county||a.state||'';
           currentLocation.country = a.country||'';
+          currentLocation.countryCode = (a.country_code||'').toUpperCase();
           const txt = [currentLocation.city, currentLocation.country].filter(Boolean).join(', ') || `${latitude.toFixed(2)}°, ${longitude.toFixed(2)}°`;
           $('locationText').textContent = txt;
         } catch(e){ $('locationText').textContent = `${latitude.toFixed(2)}°, ${longitude.toFixed(2)}°`; }
@@ -1576,8 +1603,10 @@ ${forPrint?'<style>@media print{@page{size:A4;margin:12mm}}<\/style>':''}
   }
 
   // ============ EMERGENCY ============
-  function emergencyNumbersForCountry(countryName){
-    if (countryName && EMERGENCY_NUMBERS[countryName]) return { nums: EMERGENCY_NUMBERS[countryName], known:true };
+  function emergencyNumbersForCountry(code, countryName){
+    if (code && EMERGENCY_NUMBERS[code]) return { nums: EMERGENCY_NUMBERS[code], known:true };
+    // fallback: try to match by English name (older entries / safety)
+    if (countryName){ const byName = Object.values(EMERGENCY_NUMBERS).find(e=>e.name===countryName); if (byName) return { nums: byName, known:true }; }
     return { nums: DEFAULT_EMERGENCY, known:false };
   }
   function telLink(num){ return 'tel:' + String(num).replace(/[^0-9+]/g,''); }
@@ -1598,8 +1627,20 @@ ${forPrint?'<style>@media print{@page{size:A4;margin:12mm}}<\/style>':''}
   }
 
   function openEmergency(){
-    const countryName = (currentLocation && currentLocation.country) ? currentLocation.country : null;
-    const { nums, known } = emergencyNumbersForCountry(countryName);
+    // 1) BEST: use the GPS ISO country code (language-independent, never localized)
+    const gpsCode = (currentLocation && currentLocation.countryCode) ? currentLocation.countryCode : null;
+    const rawCountry = (currentLocation && currentLocation.country) ? currentLocation.country : null;
+    let code = (gpsCode && EMERGENCY_NUMBERS[gpsCode]) ? gpsCode : null;
+    // 2) If code not in table, try resolving the (possibly localized) name to a canonical English name, then to a code
+    if (!code && rawCountry){ const cn = canonicalCountry(rawCountry); if (cn){ const hit = Object.entries(EMERGENCY_NUMBERS).find(([k,v])=>v.name===cn); if (hit) code = hit[0]; } }
+    let usedFallback = false;
+    // 3) If GPS gave us nothing usable at all, fall back to the user's chosen origin country
+    if (!code && !rawCountry && originCountry && EMERGENCY_NUMBERS[originCountry]) { code = originCountry; usedFallback = true; }
+    const { nums, known } = emergencyNumbersForCountry(code, rawCountry);
+    // Display name: prefer the localized GPS name the user sees; else origin; else the table name
+    let displayCountry = rawCountry;
+    if (!displayCountry && usedFallback && originCountry){ const o = originByCode(originCountry); displayCountry = o ? (o[lang]||o.en) : null; }
+    if (!displayCountry && code && EMERGENCY_NUMBERS[code]) displayCountry = EMERGENCY_NUMBERS[code].name;
     const origin = originCountry ? originByCode(originCountry) : null;
 
     const callRow = (cls, icon, labelKey, num) => `
@@ -1611,7 +1652,7 @@ ${forPrint?'<style>@media print{@page{size:A4;margin:12mm}}<\/style>':''}
 
     // local emergency block
     let localBlock = '';
-    const inCountry = countryName ? `${t('em_in')} ${escapeHtml(countryName)}` : '';
+    const inCountry = displayCountry ? `${t('em_in')} ${escapeHtml(displayCountry)}` : '';
     localBlock += `<div class="em-section-title">${escapeHtml(t('em_local'))} ${inCountry}</div>`;
     if (!known) localBlock += `<p class="subtitle" style="margin-top:-4px">${escapeHtml(t('em_unknown_country'))}</p>`;
     localBlock += callRow('police', '🚓', 'em_police', nums.police);
@@ -1619,19 +1660,24 @@ ${forPrint?'<style>@media print{@page{size:A4;margin:12mm}}<\/style>':''}
     localBlock += callRow('fire', '🚒', 'em_fire', nums.fire);
 
     // embassy block: origin embassy in current country
-    let embassyBlock = `<div class="em-section-title">${escapeHtml(t('em_embassy'))}</div>`;
-    if (origin){
-      const originName = origin[lang]||origin.en;
-      const label = countryName
-        ? t('em_embassy_btn', { origin: originName, country: countryName })
-        : t('em_embassy_generic');
-      // Build a maps/search query in English for reliability
-      const originEn = origin.en;
-      const q = countryName ? `${originEn} embassy in ${countryName}` : `${originEn} embassy near me`;
-      const url = `https://www.google.com/maps/search/${encodeURIComponent(q)}`;
-      embassyBlock += `<a class="em-embassy-btn" href="${url}" target="_blank" rel="noopener"><span class="eb-ic">🏛️</span><span class="eb-txt">${escapeHtml(label)}</span><span class="eb-arrow">›</span></a>`;
-    } else {
-      embassyBlock += `<button class="em-embassy-btn" onclick="openOriginPicker(true)"><span class="eb-ic">🏛️</span><span class="eb-txt">${escapeHtml(t('em_set_origin'))}</span><span class="eb-arrow">›</span></button>`;
+    // Skip when the user is in their own home country (no foreign embassy needed).
+    const inHomeCountry = origin && code && origin.code === code;
+    let embassyBlock = '';
+    if (!inHomeCountry){
+      embassyBlock = `<div class="em-section-title">${escapeHtml(t('em_embassy'))}</div>`;
+      if (origin){
+        const originName = origin[lang]||origin.en;
+        const label = displayCountry
+          ? t('em_embassy_btn', { origin: originName, country: displayCountry })
+          : t('em_embassy_generic');
+        const originEn = origin.en;
+        const countryForSearch = (code && EMERGENCY_NUMBERS[code]) ? EMERGENCY_NUMBERS[code].name : rawCountry;
+        const q = countryForSearch ? `${originEn} embassy in ${countryForSearch}` : `${originEn} embassy near me`;
+        const url = `https://www.google.com/maps/search/${encodeURIComponent(q)}`;
+        embassyBlock += `<a class="em-embassy-btn" href="${url}" target="_blank" rel="noopener"><span class="eb-ic">🏛️</span><span class="eb-txt">${escapeHtml(label)}</span><span class="eb-arrow">›</span></a>`;
+      } else {
+        embassyBlock += `<button class="em-embassy-btn" onclick="openOriginPicker(true)"><span class="eb-ic">🏛️</span><span class="eb-txt">${escapeHtml(t('em_set_origin'))}</span><span class="eb-arrow">›</span></button>`;
+      }
     }
 
     // origin row (change)
