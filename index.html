@@ -69,8 +69,8 @@
   .splash-icon { width: 150px; height: 150px; object-fit: contain;
     animation: splash-in 0.9s cubic-bezier(0.2,0.8,0.2,1);
     filter: drop-shadow(0 22px 50px rgba(8,145,178,0.45)) drop-shadow(0 10px 18px rgba(2,132,199,0.35)); }
-  .splash-name { font-size: 32px; font-weight: 700; color: var(--ink); letter-spacing: -0.01em;
-    animation: splash-text-in 0.9s 0.15s cubic-bezier(0.2,0.8,0.2,1) backwards; display: flex; align-items: baseline; gap: 0; }
+  .splash-name { font-size: 32px; font-weight: 700; color: var(--ink); letter-spacing: -0.01em; direction: ltr;
+    animation: splash-text-in 0.9s 0.15s cubic-bezier(0.2,0.8,0.2,1) backwards; display: inline-flex; align-items: baseline; gap: 0; }
   .splash-name .diary-word { color: var(--turquoise); font-weight: 800; }
   .splash-name .diary-script { font-family: 'Caveat', cursive; color: var(--ink); font-weight: 500; font-size: 0.86em; margin-inline-start: -2px; align-self: center; }
   .splash-tagline { margin-top: 2px; color: var(--muted); font-size: 13px; font-weight: 500;
@@ -80,7 +80,7 @@
   @keyframes splash-text-in { from { opacity: 0; transform: translateY(8px);} to { opacity: 1; transform: translateY(0);} }
 
   /* LOGO HEADER */
-  .logo { position: relative; display: inline-flex; align-items: baseline; font-family: 'Rubik', sans-serif;
+  .logo { position: relative; display: inline-flex; align-items: baseline; font-family: 'Rubik', sans-serif; direction: ltr;
     font-size: 21px; font-weight: 700; letter-spacing: -0.01em; padding-top: 10px; gap: 0; white-space: nowrap; }
   .logo-trip { color: var(--ink); }
   .logo-diary { color: var(--turquoise); font-weight: 800; }
@@ -784,7 +784,7 @@
   let state = { trips: [], currentTripId: null, entries: [] };
   let currentLocation = null;
   let recognition = null, isRecording = false;
-  let finalTranscript = '', interimTranscript = '';
+  let finalTranscript = '', interimTranscript = '', sessionFinal = '';
   let recordStartTime = 0, timerInterval = null;
   let sessionCategories = [];
   let sessionPhotos = []; // {id, dataUrl}
@@ -874,17 +874,29 @@
     const r = new SR(); r.lang = lang==='he'?'he-IL':'en-US'; r.continuous = true; r.interimResults = true; return r;
   }
   function startRecording() {
-    finalTranscript=''; interimTranscript='';
+    finalTranscript=''; interimTranscript=''; sessionFinal='';
     const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
     if (!SR) { openManualEntry(); return; }
     recognition = setupRecognition();
     recognition.onresult = e => {
-      interimTranscript='';
-      for (let i=e.resultIndex; i<e.results.length; i++){ const tx=e.results[i][0].transcript; if (e.results[i].isFinal) finalTranscript+=tx+' '; else interimTranscript+=tx; }
+      // Rebuild this session's text from scratch every event so Android's
+      // repeated re-sending of finalized results does NOT pile up duplicates.
+      let sf = '', it = '';
+      for (let i=0; i<e.results.length; i++){
+        const tx = e.results[i][0].transcript;
+        if (e.results[i].isFinal) sf += tx + ' ';
+        else it += tx;
+      }
+      sessionFinal = sf;
+      interimTranscript = it;
       updateLiveTranscript();
     };
     recognition.onerror = e => { if (e.error==='not-allowed'){ toast(t('no_mic')); stopRecording(false);} else if (e.error==='language-not-supported') toast(t('no_hebrew')); };
-    recognition.onend = () => { if (isRecording){ try{ recognition.start(); }catch(e){ setTimeout(()=>{ if(isRecording){ try{recognition.start();}catch(_){}} },300); } } };
+    recognition.onend = () => {
+      // commit the finalized text of this session before any restart, then reset session
+      finalTranscript += sessionFinal; sessionFinal=''; interimTranscript='';
+      if (isRecording){ try{ recognition.start(); }catch(e){ setTimeout(()=>{ if(isRecording){ try{recognition.start();}catch(_){}} },300); } }
+    };
     try { recognition.start(); } catch(e){ toast(t('rec_error')); return; }
     isRecording = true; recordStartTime = Date.now();
     const b=$('recordBtn'); b.classList.add('recording'); b.innerHTML='<div class="stop-icon"></div>';
@@ -893,7 +905,7 @@
     timerInterval = setInterval(()=>{ const s=Math.floor((Date.now()-recordStartTime)/1000); $('timer').textContent=`${String(Math.floor(s/60)).padStart(2,'0')}:${String(s%60).padStart(2,'0')}`; }, 250);
   }
   function updateLiveTranscript(){
-    const el=$('liveTranscript'); const f=finalTranscript.trim(), i=interimTranscript.trim();
+    const el=$('liveTranscript'); const f=(finalTranscript+sessionFinal).trim(), i=interimTranscript.trim();
     if (!f && !i){ el.innerHTML=`<span>${escapeHtml(t('start_speaking'))}</span>`; el.classList.add('empty'); }
     else { el.classList.remove('empty'); el.innerHTML = escapeHtml(f) + (i?'<span class="interim"> '+escapeHtml(i)+'</span>':''); }
   }
@@ -904,10 +916,10 @@
     $('recordLabel').textContent=t('tap_to_record'); $('liveTranscript').style.display='none';
     $('cancelRecBtn').style.display='none';
     if (recognition){ try{ recognition.stop(); }catch(e){} recognition=null; }
-    const text=(finalTranscript+' '+interimTranscript).trim();
+    const text=(finalTranscript+' '+sessionFinal+' '+interimTranscript).replace(/\s+/g,' ').trim();
     if (savePresent && (text || sessionPhotos.length || sessionVideos.length)){ pendingEntryText = text; openDestinationModal(); }
     else { if (savePresent && !text) toast(t('no_text')); sessionCategories=[]; sessionPhotos=[]; sessionVideos=[]; }
-    finalTranscript=''; interimTranscript='';
+    finalTranscript=''; interimTranscript=''; sessionFinal='';
   }
   function cancelRecording(){
     // discard everything from this recording session, save nothing
@@ -1468,7 +1480,7 @@ background-image:radial-gradient(ellipse 60% 40% at 80% 0%,rgba(34,211,238,0.10)
 .wrap{max-width:760px;margin:0 auto;padding:0 22px}
 .cover{text-align:center;padding:58px 22px 36px}
 .logo{width:96px;height:96px;border-radius:26px;object-fit:contain;margin:0 auto 22px;display:block;filter:drop-shadow(0 16px 36px rgba(8,145,178,0.45))}
-.brand{font-size:15px;font-weight:700;letter-spacing:-0.02em;color:var(--muted);margin-bottom:16px}
+.brand{font-size:15px;font-weight:700;letter-spacing:-0.02em;color:var(--muted);margin-bottom:16px;direction:ltr;display:inline-block}
 .brand .d{color:var(--turql);font-weight:800}
 .brand .ds{font-family:'Caveat',cursive;color:#0a0a0a;font-weight:500;font-size:0.88em;margin-inline-start:-2px}
 .cover h1{font-size:clamp(30px,7vw,46px);font-weight:900;letter-spacing:-0.03em;line-height:1.05;margin-bottom:12px}
@@ -1496,7 +1508,7 @@ background-image:radial-gradient(ellipse 60% 40% at 80% 0%,rgba(34,211,238,0.10)
 .photos{display:flex;flex-wrap:wrap;gap:8px;margin-top:12px}
 .photo{width:130px;height:130px;object-fit:cover;border-radius:12px;border:1px solid var(--line)}
 .foot{text-align:center;color:var(--muted);font-size:13px;margin-top:40px;padding-top:24px;border-top:1px solid var(--line)}
-.foot .fb{font-weight:700;color:var(--ink-soft);margin-bottom:5px}
+.foot .fb{font-weight:700;color:var(--ink-soft);margin-bottom:5px;direction:ltr;display:inline-block}
 .foot .fb .d{color:var(--turql);font-weight:800}
 .foot .fb .ds{font-family:'Caveat',cursive;color:#0a0a0a;font-weight:500;font-size:0.88em;margin-inline-start:-2px}
 @media(max-width:560px){.stats{grid-template-columns:repeat(2,1fr)}.photo{width:calc(50% - 4px);height:140px}}
