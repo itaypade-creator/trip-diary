@@ -405,7 +405,7 @@
   function setupRecognition(){
     const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
     if (!SR) return null;
-    const r = new SR(); r.lang = lang==='he'?'he-IL':'en-US'; r.continuous = true; r.interimResults = true; return r;
+    const r = new SR(); r.lang = lang==='he'?'he-IL':'en-US'; r.continuous = false; r.interimResults = true; return r;
   }
   // Merge a newly finalized chunk onto the running transcript, dropping any
   // leading overlap the engine replays on restart. Drops a full replay or a
@@ -450,7 +450,9 @@
         else it += res[0].transcript;
       }
       interimTranscript = it;
-      logSpeech(`RESULT i=${e.resultIndex} n=${e.results.length} sess="${sessionText().slice(-34)}" int="${it.slice(0,18)}"`);
+      const rawNow = sessionText();
+      logSpeech(`RAW="${rawNow.slice(-40)}"`);
+      logSpeech(` -> COLLAPSED="${collapseRepeats(rawNow).slice(-40)}"`);
       updateLiveTranscript();
     };
     recognition.onerror = e => { logSpeech('ERROR '+e.error); if (e.error==='not-allowed'){ toast(t('no_mic')); stopRecording(false);} else if (e.error==='language-not-supported') toast(t('no_hebrew')); };
@@ -491,6 +493,7 @@
     $('cancelRecBtn').style.display='none';
     if (recognition){ try{ recognition.stop(); }catch(e){} recognition=null; }
     const text=(liveFull()+' '+interimTranscript).replace(/\s+/g,' ').trim();
+    logSpeech(`FINAL SAVED = "${text}"`);
     if (savePresent && (text || sessionPhotos.length || sessionVideos.length)){ pendingEntryText = text; openDestinationModal(); }
     else { if (savePresent && !text) toast(t('no_text')); sessionCategories=[]; sessionPhotos=[]; sessionVideos=[]; }
     finalTranscript=''; interimTranscript=''; committedTranscript=''; lastSessionText=''; sessionMap={};
