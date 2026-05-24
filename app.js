@@ -277,7 +277,7 @@
   let finalTranscript = '', interimTranscript = '', committedTranscript = '';
   let sessionMap = {};        // absolute result-index -> final transcript, current session only
   let lastSessionText = '';   // full text of the session we last committed (replay guard)
-  const DEBUG_SPEECH = true;  // diagnostic build: shows the raw speech events on screen
+  const DEBUG_SPEECH = false; // diagnostic overlay disabled for production
   let speechLog = [];
   function logSpeech(msg){
     if (!DEBUG_SPEECH) return;
@@ -439,7 +439,7 @@
     const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
     if (!SR) { openManualEntry(); return; }
     recognition = setupRecognition();
-    recognition.onstart = () => logSpeech('START (new session) [BUILD v3-collapse]');
+    recognition.onstart = () => logSpeech('START (new session)');
     recognition.onresult = e => {
       // Track finals by their ABSOLUTE index. Re-fired index -> overwrites (no dup);
       // new index -> adds. No string-overlap guessing inside a session.
