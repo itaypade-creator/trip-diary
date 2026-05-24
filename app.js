@@ -481,9 +481,16 @@
     timerInterval = setInterval(()=>{ const s=Math.floor((Date.now()-recordStartTime)/1000); $('timer').textContent=`${String(Math.floor(s/60)).padStart(2,'0')}:${String(s%60).padStart(2,'0')}`; }, 250);
   }
   function updateLiveTranscript(){
-    const el=$('liveTranscript'); const f=liveFull(), i=interimTranscript.trim();
-    if (!f && !i){ el.innerHTML=`<span>${escapeHtml(t('start_speaking'))}</span>`; el.classList.add('empty'); }
-    else { el.classList.remove('empty'); el.innerHTML = escapeHtml(f) + (i?'<span class="interim"> '+escapeHtml(i)+'</span>':''); }
+    const el=$('liveTranscript');
+    const full = collapseRepeats((liveFull()+' '+interimTranscript).replace(/\s+/g,' ').trim());
+    const committedClean = liveFull();
+    if (!full){ el.innerHTML=`<span>${escapeHtml(t('start_speaking'))}</span>`; el.classList.add('empty'); }
+    else {
+      el.classList.remove('empty');
+      // show the stable (committed) part normally, and any extra tail as interim-styled
+      const interimPart = full.length>committedClean.length ? full.slice(committedClean.length).trim() : '';
+      el.innerHTML = escapeHtml(committedClean) + (interimPart?'<span class="interim"> '+escapeHtml(interimPart)+'</span>':'');
+    }
   }
   async function stopRecording(savePresent=true){
     isRecording=false; clearInterval(timerInterval); $('timer').textContent='';
@@ -492,7 +499,18 @@
     $('recordLabel').textContent=t('tap_to_record'); $('liveTranscript').style.display='none';
     $('cancelRecBtn').style.display='none';
     if (recognition){ try{ recognition.stop(); }catch(e){} recognition=null; }
-    const text=(liveFull()+' '+interimTranscript).replace(/\s+/g,' ').trim();
+    // Do NOT append raw interim — on Android it's an interleaved storm that adjacency
+    // collapse can't repair. Fold any pending interim into committed via the same
+    // prefix/collapse path that produced the clean committed text, then save that.
+    if (interimTranscript.trim()){
+      const merged = sw((sessionText()+' '+interimTranscript).replace(/\s+/g,' ').trim());
+      const last = sw(lastSessionText);
+      let isPrefix = last.length>0 && merged.length>=last.length;
+      for (let i=0;i<last.length && isPrefix;i++) if (normW(merged[i])!==normW(last[i])) isPrefix=false;
+      const tail = isPrefix ? merged.slice(last.length).join(' ') : merged.join(' ');
+      committedTranscript = collapseRepeats((committedTranscript+' '+tail).replace(/\s+/g,' ').trim());
+    }
+    const text = collapseRepeats(committedTranscript.replace(/\s+/g,' ').trim());
     logSpeech(`FINAL SAVED = "${text}"`);
     if (savePresent && (text || sessionPhotos.length || sessionVideos.length)){ pendingEntryText = text; openDestinationModal(); }
     else { if (savePresent && !text) toast(t('no_text')); sessionCategories=[]; sessionPhotos=[]; sessionVideos=[]; }
