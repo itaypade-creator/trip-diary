@@ -274,7 +274,37 @@
   let state = { trips: [], currentTripId: null, entries: [] };
   let currentLocation = null;
   let recognition = null, isRecording = false;
-  let finalTranscript = '', interimTranscript = '', sessionFinal = '', committedTranscript = '';
+  let finalTranscript = '', interimTranscript = '', committedTranscript = '';
+  let sessionMap = {};        // absolute result-index -> final transcript, current session only
+  let lastSessionText = '';   // full text of the session we last committed (replay guard)
+  const DEBUG_SPEECH = true;  // diagnostic build: shows the raw speech events on screen
+  let speechLog = [];
+  function logSpeech(msg){
+    if (!DEBUG_SPEECH) return;
+    const base = recordStartTime || Date.now();
+    speechLog.push(((Date.now()-base)/1000).toFixed(1)+'s  '+msg);
+    if (speechLog.length>22) speechLog.shift();
+    let el = document.getElementById('speechDebug');
+    if (!el){ el=document.createElement('div'); el.id='speechDebug';
+      el.style.cssText='position:fixed;left:0;right:0;bottom:0;max-height:44vh;overflow:auto;background:rgba(0,0,0,0.9);color:#3f3;font:11px/1.4 monospace;padding:10px;z-index:99999;white-space:pre-wrap;direction:ltr;text-align:left';
+      document.body.appendChild(el); }
+    el.textContent = speechLog.join('\n');
+  }
+  function sw(s){ return (s||'').trim().split(/\s+/).filter(Boolean); }            // split to words
+  const normW = w => w.toLowerCase().replace(/[.,!?;:'"\u05BE\u05F3\u05F4]/g,'');   // normalize for compare
+  function sessionText(){
+    return Object.keys(sessionMap).map(Number).sort((a,b)=>a-b).map(k=>sessionMap[k]).join(' ').replace(/\s+/g,' ').trim();
+  }
+  // returns {tail, isPrefix} of current session relative to lastSessionText
+  function sessionTail(){
+    const cur = sw(sessionText()), last = sw(lastSessionText);
+    let isPrefix = last.length>0 && cur.length>=last.length;
+    for (let i=0;i<last.length && isPrefix;i++) if (normW(cur[i])!==normW(last[i])) isPrefix=false;
+    return { tail: isPrefix ? cur.slice(last.length).join(' ') : cur.join(' '), isPrefix, curLen: cur.length, lastLen: last.length };
+  }
+  function liveFull(){
+    return (committedTranscript + ' ' + sessionTail().tail).replace(/\s+/g,' ').trim();
+  }
   let recordStartTime = 0, timerInterval = null;
   let sessionCategories = [];
   let sessionPhotos = []; // {id, dataUrl}
@@ -389,40 +419,42 @@
     return a.concat(b.slice(overlap)).join(' ') + ' ';
   }
   function startRecording() {
-    finalTranscript=''; interimTranscript=''; sessionFinal=''; committedTranscript='';
+    finalTranscript=''; interimTranscript=''; committedTranscript=''; lastSessionText='';
+    sessionMap={}; speechLog=[];
+    const old=document.getElementById('speechDebug'); if(old) old.remove();
     const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
     if (!SR) { openManualEntry(); return; }
     recognition = setupRecognition();
+    recognition.onstart = () => logSpeech('START (new session)');
     recognition.onresult = e => {
-      // Rebuild THIS session's final text from scratch every event. On Android,
-      // e.results keeps growing across auto-restarts and is NOT cleared, so it
-      // already holds everything spoken since the last real reset — we treat it
-      // as the single source of truth and never concatenate sessions together.
-      let sf = '', it = '';
-      for (let i=0; i<e.results.length; i++){
-        const tx = e.results[i][0].transcript;
-        if (e.results[i].isFinal) sf += tx + ' ';
-        else it += tx;
+      // Track finals by their ABSOLUTE index. Re-fired index -> overwrites (no dup);
+      // new index -> adds. No string-overlap guessing inside a session.
+      let it = '';
+      for (let i = e.resultIndex; i < e.results.length; i++){
+        const res = e.results[i];
+        if (res.isFinal) sessionMap[i] = res[0].transcript;
+        else it += res[0].transcript;
       }
-      sessionFinal = sf;
       interimTranscript = it;
+      logSpeech(`RESULT i=${e.resultIndex} n=${e.results.length} sess="${sessionText().slice(-34)}" int="${it.slice(0,18)}"`);
       updateLiveTranscript();
     };
-    recognition.onerror = e => { if (e.error==='not-allowed'){ toast(t('no_mic')); stopRecording(false);} else if (e.error==='language-not-supported') toast(t('no_hebrew')); };
+    recognition.onerror = e => { logSpeech('ERROR '+e.error); if (e.error==='not-allowed'){ toast(t('no_mic')); stopRecording(false);} else if (e.error==='language-not-supported') toast(t('no_hebrew')); };
     recognition.onend = () => {
-      // Whatever this session finalized is the complete picture so far. Keep the
-      // LONGER of {what we already committed, this session} — restarts that reset
-      // e.results keep their words via committedTranscript; restarts that don't
-      // reset it simply replace it. Either way: no pile-up.
-      const snap = sessionFinal.trim();
-      if (snap){
-        if (snap.startsWith(committedTranscript.trim()) || !committedTranscript.trim()){
-          committedTranscript = snap;            // session still holds full history
-        } else {
-          committedTranscript = mergeFinal(committedTranscript, snap).trim(); // engine reset mid-way
+      // Commit this finished session. Compare to the PREVIOUS session (not the whole
+      // committed text) so engine carry-over / replay is handled cleanly.
+      const info = sessionTail();
+      const full = sessionText();
+      if (full){
+        if (info.isPrefix && info.curLen === info.lastLen){
+          logSpeech('END -> skip (identical replay)');           // pure replay, ignore
+        } else if (info.tail){
+          committedTranscript = (committedTranscript+' '+info.tail).replace(/\s+/g,' ').trim();
+          lastSessionText = full;
+          logSpeech(`END +"${info.tail.slice(0,30)}" => committed n=${sw(committedTranscript).length}`);
         }
-      }
-      finalTranscript = committedTranscript; sessionFinal=''; interimTranscript='';
+      } else { logSpeech('END (empty session)'); }
+      finalTranscript = committedTranscript; sessionMap={}; interimTranscript='';
       if (isRecording){ try{ recognition.start(); }catch(e){ setTimeout(()=>{ if(isRecording){ try{recognition.start();}catch(_){}} },300); } }
     };
     try { recognition.start(); } catch(e){ toast(t('rec_error')); return; }
@@ -433,11 +465,7 @@
     timerInterval = setInterval(()=>{ const s=Math.floor((Date.now()-recordStartTime)/1000); $('timer').textContent=`${String(Math.floor(s/60)).padStart(2,'0')}:${String(s%60).padStart(2,'0')}`; }, 250);
   }
   function updateLiveTranscript(){
-    const el=$('liveTranscript');
-    // Live view: prefer the longer of committed vs current session, never their sum.
-    const base = sessionFinal.trim().startsWith(committedTranscript.trim()) || !committedTranscript.trim()
-      ? sessionFinal.trim() : mergeFinal(committedTranscript, sessionFinal).trim();
-    const f = base, i = interimTranscript.trim();
+    const el=$('liveTranscript'); const f=liveFull(), i=interimTranscript.trim();
     if (!f && !i){ el.innerHTML=`<span>${escapeHtml(t('start_speaking'))}</span>`; el.classList.add('empty'); }
     else { el.classList.remove('empty'); el.innerHTML = escapeHtml(f) + (i?'<span class="interim"> '+escapeHtml(i)+'</span>':''); }
   }
@@ -448,17 +476,10 @@
     $('recordLabel').textContent=t('tap_to_record'); $('liveTranscript').style.display='none';
     $('cancelRecBtn').style.display='none';
     if (recognition){ try{ recognition.stop(); }catch(e){} recognition=null; }
-    // Same non-accumulating rule as the live view: take the longer of committed
-    // vs the current session snapshot, then append only the trailing interim.
-    const snap = sessionFinal.trim();
-    let base;
-    if (!committedTranscript.trim()) base = snap;
-    else if (snap.startsWith(committedTranscript.trim()) || !snap) base = snap || committedTranscript.trim();
-    else base = mergeFinal(committedTranscript, snap).trim();
-    const text=(base+' '+interimTranscript).replace(/\s+/g,' ').trim();
+    const text=(liveFull()+' '+interimTranscript).replace(/\s+/g,' ').trim();
     if (savePresent && (text || sessionPhotos.length || sessionVideos.length)){ pendingEntryText = text; openDestinationModal(); }
     else { if (savePresent && !text) toast(t('no_text')); sessionCategories=[]; sessionPhotos=[]; sessionVideos=[]; }
-    finalTranscript=''; interimTranscript=''; sessionFinal=''; committedTranscript='';
+    finalTranscript=''; interimTranscript=''; committedTranscript=''; lastSessionText=''; sessionMap={};
   }
   function cancelRecording(){
     // discard everything from this recording session, save nothing
