@@ -439,7 +439,7 @@
     const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
     if (!SR) { openManualEntry(); return; }
     recognition = setupRecognition();
-    recognition.onstart = () => logSpeech('START (new session)');
+    recognition.onstart = () => logSpeech('START (new session) [BUILD v3-collapse]');
     recognition.onresult = e => {
       // Track finals by their ABSOLUTE index. Re-fired index -> overwrites (no dup);
       // new index -> adds. No string-overlap guessing inside a session.
@@ -463,9 +463,9 @@
         if (info.isPrefix && info.curLen === info.lastLen){
           logSpeech('END -> skip (identical replay)');           // pure replay, ignore
         } else if (info.tail){
-          committedTranscript = (committedTranscript+' '+info.tail).replace(/\s+/g,' ').trim();
+          committedTranscript = collapseRepeats((committedTranscript+' '+info.tail).replace(/\s+/g,' ').trim());
           lastSessionText = full;
-          logSpeech(`END +"${info.tail.slice(0,30)}" => committed n=${sw(committedTranscript).length}`);
+          logSpeech(`END committed="${committedTranscript.slice(0,40)}" n=${sw(committedTranscript).length}`);
         }
       } else { logSpeech('END (empty session)'); }
       finalTranscript = committedTranscript; sessionMap={}; interimTranscript='';
