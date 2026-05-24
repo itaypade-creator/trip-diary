@@ -29,7 +29,7 @@
       no_trips_yet: 'No trips yet', new_trip_btn: '+ New trip', close: 'Close',
       manual_title: 'Type manually', manual_sub: 'This browser does not support voice transcription. Try Chrome for full functionality. Meanwhile, you can type.',
       write_placeholder: 'Tell us about your day…', save: 'Save entry',
-      edit: 'Edit', delete: 'Delete', add_photo: 'Add photo', listen: 'Listen', stop_listen: 'Stop',
+      edit: 'Edit', delete: 'Delete', add_photo: 'Add photo', remove_photo: 'Remove photo', del_photo_confirm: 'Remove this photo?', write_entry: 'Write', listen: 'Listen', stop_listen: 'Stop',
       no_tts: 'Read-aloud not supported in this browser',
       emergency: 'Emergency', sos: 'SOS',
       origin_title: 'Where are you from?', origin_sub: 'Pick your home country once. In an emergency we\'ll show your embassy abroad. You can change this later in the Emergency screen.',
@@ -86,7 +86,7 @@
       no_trips_yet: 'עדיין אין טיולים', new_trip_btn: '+ טיול חדש', close: 'סגור',
       manual_title: 'הקלדה ידנית', manual_sub: 'הדפדפן הזה לא תומך בתמלול קולי. אפשר להקליד ידנית. ב-Chrome התמלול הקולי יעבוד.',
       write_placeholder: 'ספר על היום…', save: 'שמור רשומה',
-      edit: 'ערוך', delete: 'מחק', add_photo: 'הוסף תמונה', listen: 'הקרא', stop_listen: 'עצור',
+      edit: 'ערוך', delete: 'מחק', add_photo: 'הוסף תמונה', remove_photo: 'הסר תמונה', del_photo_confirm: 'להסיר את התמונה?', write_entry: 'כתוב', listen: 'הקרא', stop_listen: 'עצור',
       no_tts: 'הקראה לא נתמכת בדפדפן הזה',
       emergency: 'חירום', sos: 'חירום',
       origin_title: 'מאיפה אתה?', origin_sub: 'בחר את ארץ המוצא שלך פעם אחת. במצב חירום נציג לך את השגרירות שלך בחו\"ל. אפשר לשנות בהמשך במסך החירום.',
@@ -363,6 +363,31 @@
     if (!SR) return null;
     const r = new SR(); r.lang = lang==='he'?'he-IL':'en-US'; r.continuous = true; r.interimResults = true; return r;
   }
+  // Merge a newly finalized chunk onto the running transcript, dropping any
+  // leading overlap the engine replays on restart. Drops a full replay or a
+  // 2+ word phrase repeat; keeps single-word repeats so real repetition stays.
+  function mergeFinal(prev, chunk){
+    const a = (prev||'').trim().split(/\s+/).filter(Boolean);
+    const b = (chunk||'').trim().split(/\s+/).filter(Boolean);
+    if (!b.length) return a.length ? a.join(' ')+' ' : '';
+    if (!a.length) return b.join(' ')+' ';
+    const norm = w => w.toLowerCase().replace(/[.,!?;:'"]/g,'');
+    const maxk = Math.min(a.length, b.length);
+    let overlap = 0;
+    // Find the largest tail-of-prev that equals head-of-chunk (the engine
+    // replays already-finalized words when it auto-restarts).
+    for (let k=maxk; k>=1; k--){
+      let ok = true;
+      for (let j=0; j<k; j++){ if (norm(a[a.length-k+j]) !== norm(b[j])){ ok=false; break; } }
+      if (ok){ overlap = k; break; }
+    }
+    // Drop the overlap whenever it's a real replay: a full chunk replay,
+    // a multi-word repeat, OR a single word identical to the last one
+    // (this last case is what made one word repeat many times on Android).
+    if (!(overlap === b.length || overlap >= 2 ||
+          (overlap === 1 && norm(a[a.length-1]) === norm(b[0])))) overlap = 0;
+    return a.concat(b.slice(overlap)).join(' ') + ' ';
+  }
   function startRecording() {
     finalTranscript=''; interimTranscript=''; sessionFinal='';
     const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
@@ -383,8 +408,9 @@
     };
     recognition.onerror = e => { if (e.error==='not-allowed'){ toast(t('no_mic')); stopRecording(false);} else if (e.error==='language-not-supported') toast(t('no_hebrew')); };
     recognition.onend = () => {
-      // commit the finalized text of this session before any restart, then reset session
-      finalTranscript += sessionFinal; sessionFinal=''; interimTranscript='';
+      // Commit this session's final text, removing any overlap the speech engine
+      // re-reports on restart (this is what caused words repeating many times).
+      finalTranscript = mergeFinal(finalTranscript, sessionFinal); sessionFinal=''; interimTranscript='';
       if (isRecording){ try{ recognition.start(); }catch(e){ setTimeout(()=>{ if(isRecording){ try{recognition.start();}catch(_){}} },300); } }
     };
     try { recognition.start(); } catch(e){ toast(t('rec_error')); return; }
@@ -395,7 +421,7 @@
     timerInterval = setInterval(()=>{ const s=Math.floor((Date.now()-recordStartTime)/1000); $('timer').textContent=`${String(Math.floor(s/60)).padStart(2,'0')}:${String(s%60).padStart(2,'0')}`; }, 250);
   }
   function updateLiveTranscript(){
-    const el=$('liveTranscript'); const f=(finalTranscript+sessionFinal).trim(), i=interimTranscript.trim();
+    const el=$('liveTranscript'); const f=mergeFinal(finalTranscript, sessionFinal).trim(), i=interimTranscript.trim();
     if (!f && !i){ el.innerHTML=`<span>${escapeHtml(t('start_speaking'))}</span>`; el.classList.add('empty'); }
     else { el.classList.remove('empty'); el.innerHTML = escapeHtml(f) + (i?'<span class="interim"> '+escapeHtml(i)+'</span>':''); }
   }
@@ -406,7 +432,7 @@
     $('recordLabel').textContent=t('tap_to_record'); $('liveTranscript').style.display='none';
     $('cancelRecBtn').style.display='none';
     if (recognition){ try{ recognition.stop(); }catch(e){} recognition=null; }
-    const text=(finalTranscript+' '+sessionFinal+' '+interimTranscript).replace(/\s+/g,' ').trim();
+    const text=(mergeFinal(finalTranscript, sessionFinal)+' '+interimTranscript).replace(/\s+/g,' ').trim();
     if (savePresent && (text || sessionPhotos.length || sessionVideos.length)){ pendingEntryText = text; openDestinationModal(); }
     else { if (savePresent && !text) toast(t('no_text')); sessionCategories=[]; sessionPhotos=[]; sessionVideos=[]; }
     finalTranscript=''; interimTranscript=''; sessionFinal='';
@@ -543,6 +569,13 @@
       await save(); renderAll(); toast(t('saved'));
     };
     inp.click();
+  }
+  async function removeEntryPhoto(entryId, pid){
+    if (!confirm(t('del_photo_confirm'))) return;
+    const e = state.entries.find(x=>x.id===entryId); if (!e || !e.photos) return;
+    e.photos = e.photos.filter(p=>p!==pid);
+    try { await photoDB.del(pid); } catch(_){}
+    await save(); renderAll(); haptic([10,30]); toast(t('deleted'));
   }
 
   // ============ TRIPS ============
@@ -695,7 +728,7 @@
     entries.forEach(async e => {
       if (e.photos && e.photos.length){
         const c = feed.querySelector(`[data-photos="${e.id}"]`);
-        if (c){ for (const pid of e.photos){ const url = await photoDB.get(pid); if (url){ const img=document.createElement('img'); img.className='entry-photo'; img.src=url; img.onclick=ev=>{ev.stopPropagation();openLightbox(url);}; c.appendChild(img); } } }
+        if (c){ for (const pid of e.photos){ const url = await photoDB.get(pid); if (url){ const wrap=document.createElement('div'); wrap.className='entry-photo-wrap'; const img=document.createElement('img'); img.className='entry-photo'; img.src=url; img.onclick=ev=>{ev.stopPropagation();openLightbox(url);}; const del=document.createElement('button'); del.className='entry-photo-del'; del.type='button'; del.innerHTML='&times;'; del.title=t('remove_photo'); del.setAttribute('aria-label', t('remove_photo')); del.onclick=ev=>{ev.stopPropagation();removeEntryPhoto(e.id, pid);}; wrap.appendChild(img); wrap.appendChild(del); c.appendChild(wrap); } } }
       }
       if (e.videos && e.videos.length){
         const cv = feed.querySelector(`[data-videos="${e.id}"]`);
@@ -1227,7 +1260,7 @@ ${forPrint?'<style>@media print{@page{size:A4;margin:12mm}}<\/style>':''}
 
   // expose
   Object.assign(window, { openNewTripModal, submitNewTrip, closeModal, selectTrip, deleteTrip, deleteEntry, editEntry,
-    addPhotoToEntry, openManualEntry, submitManual, openCategoryModal, toggleCategory, confirmCategoriesAndRecord,
+    addPhotoToEntry, removeEntryPhoto, openManualEntry, submitManual, openCategoryModal, toggleCategory, confirmCategoriesAndRecord,
     removeSessionPhoto, removeSessionVideo, toggleFilter, openLightbox, exportHtml, exportPdf, buildExportDoc,
     setJournalType, openDestinationModal, chooseDestination, toggleSpeak,
     toggleTheme, setGroupMode, downloadBackup, startRestore, openBackup, openEditTags, toggleEditCat, toggleEditJournal, saveEditTags,
@@ -1287,7 +1320,7 @@ ${forPrint?'<style>@media print{@page{size:A4;margin:12mm}}<\/style>':''}
     await load(); applyTheme(); await setLang(lang); fetchLocation();
     const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
     if (!SR){ const n=document.createElement('div'); n.className='notice'; n.textContent=t('no_speech_notice'); document.querySelector('header').after(n); }
-    setTimeout(()=>$('splash').classList.add('hidden'), 1800);
+    setTimeout(()=>$('splash').classList.add('hidden'), 3000);
     registerOfflineSW();
-    if (!originOnboarded){ setTimeout(()=>{ if(!originOnboarded) openOriginPicker(false); }, 2600); }
+    if (!originOnboarded){ setTimeout(()=>{ if(!originOnboarded) openOriginPicker(false); }, 3800); }
   })();

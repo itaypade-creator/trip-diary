@@ -64,7 +64,15 @@
     background-image: radial-gradient(ellipse 80% 50% at 15% 0%, rgba(34,211,238,0.22) 0%, transparent 60%),
       radial-gradient(ellipse 70% 50% at 90% 25%, rgba(20,184,166,0.20) 0%, transparent 60%),
       radial-gradient(ellipse 80% 60% at 50% 100%, rgba(56,189,248,0.18) 0%, transparent 60%);
-    transition: opacity 0.6s ease, transform 0.6s ease; }
+    transition: opacity 0.6s ease, transform 0.6s ease; overflow: hidden; }
+  .splash-map { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none;
+    color: var(--turquoise); opacity: 0.22; z-index: 0;
+    display: flex; align-items: center; justify-content: center;
+    animation: splash-map-in 1.4s ease both; }
+  .splash-map svg { width: 130%; height: auto; max-height: 100%; }
+  body.dark .splash-map { opacity: 0.16; }
+  @keyframes splash-map-in { from { opacity: 0; transform: scale(1.08);} to { opacity: 0.22; transform: scale(1);} }
+  .splash > .splash-icon, .splash > .splash-name, .splash > .splash-tagline { position: relative; z-index: 1; }
   .splash.hidden { opacity: 0; pointer-events: none; transform: scale(1.05); }
   .splash-icon { width: 150px; height: 150px; object-fit: contain;
     animation: splash-in 0.9s cubic-bezier(0.2,0.8,0.2,1);
@@ -175,6 +183,12 @@
     50% { box-shadow: 0 14px 32px -8px rgba(244,63,94,0.55), inset 0 -4px 0 rgba(0,0,0,0.2), inset 0 2px 0 rgba(255,255,255,0.2), 0 0 0 20px rgba(244,63,94,0); } }
   .stop-icon { width: 30px; height: 30px; background: currentColor; border-radius: 6px; }
   .record-label { margin-top: 20px; font-size: 14px; font-weight: 500; color: var(--muted); }
+  .write-btn { margin-top: 14px; display: inline-flex; align-items: center; gap: 7px; padding: 9px 18px;
+    border-radius: 100px; border: 1px solid var(--line-strong); background: var(--card);
+    color: var(--ink-soft); font-family: inherit; font-size: 13.5px; font-weight: 600; cursor: pointer;
+    box-shadow: var(--shadow-sm); transition: transform .12s, background .15s, border-color .15s; }
+  .write-btn:active { transform: scale(0.96); background: var(--bg-tint); border-color: var(--turquoise); color: var(--primary); }
+  .write-btn svg { flex-shrink: 0; }
   .cancel-rec-btn { margin-top: 12px; display: inline-flex; align-items: center; gap: 6px; padding: 8px 16px;
     border-radius: 100px; border: 1.5px solid rgba(244,63,94,0.35); background: rgba(244,63,94,0.08);
     color: #e11d48; font-size: 13px; font-weight: 600; cursor: pointer; transition: transform .12s, background .15s; }
@@ -232,7 +246,13 @@
   .entry-tag .e { font-size: 12px; line-height: 1; }
   .entry-text { font-size: 15px; line-height: 1.75; color: var(--ink-soft); white-space: pre-wrap; word-break: break-word; }
   .entry-photos { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 10px; }
-  .entry-photo { width: 72px; height: 72px; border-radius: 10px; object-fit: cover; border: 1px solid var(--line); cursor: pointer; }
+  .entry-photo-wrap { position: relative; width: 72px; height: 72px; }
+  .entry-photo { width: 72px; height: 72px; border-radius: 10px; object-fit: cover; border: 1px solid var(--line); cursor: pointer; display: block; }
+  .entry-photo-del { position: absolute; top: -6px; inset-inline-end: -6px; width: 22px; height: 22px;
+    border-radius: 50%; background: var(--red-record); color: #fff; border: 2px solid var(--card);
+    font-size: 14px; line-height: 1; cursor: pointer; display: flex; align-items: center; justify-content: center;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.25); padding: 0; z-index: 2; }
+  .entry-photo-del:active { transform: scale(0.9); filter: brightness(1.05); }
   .entry-actions { margin-top: 12px; padding-top: 10px; border-top: 1px solid var(--line); display: none; gap: 8px; font-size: 12px; flex-wrap: wrap; }
   .entry.open .entry-actions { display: flex; }
   .entry-action { background: none; border: 1px solid var(--line); color: var(--muted); cursor: pointer;
@@ -394,6 +414,40 @@
 
 <!-- SPLASH -->
 <div class="splash" id="splash">
+  <div class="splash-map" aria-hidden="true">
+    <svg viewBox="0 0 1000 500" fill="none" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="xMidYMid meet">
+      <g stroke="currentColor" stroke-width="2.2" stroke-linejoin="round" stroke-linecap="round" fill="currentColor" fill-opacity="0.10">
+        <!-- North America -->
+        <path d="M150 95 L235 80 L300 100 L280 140 L300 165 L255 205 L240 250 L210 235 L205 195 L165 175 L140 135 Z"/>
+        <!-- Central + South America -->
+        <path d="M255 250 L285 260 L300 300 L335 320 L320 370 L300 430 L280 400 L285 345 L260 300 Z"/>
+        <!-- Greenland -->
+        <path d="M360 55 L405 50 L420 85 L390 110 L360 90 Z"/>
+        <!-- Europe -->
+        <path d="M470 110 L540 100 L560 130 L540 160 L500 165 L478 145 Z"/>
+        <!-- Africa -->
+        <path d="M500 200 L575 195 L600 240 L585 305 L545 365 L515 330 L505 270 L490 235 Z"/>
+        <!-- Asia -->
+        <path d="M560 95 L720 85 L820 110 L860 150 L820 195 L740 200 L660 185 L600 160 L575 130 Z"/>
+        <!-- India -->
+        <path d="M650 200 L700 205 L690 255 L665 240 Z"/>
+        <!-- SE Asia / Indonesia -->
+        <path d="M760 230 L830 245 L870 270 L820 290 L770 270 Z"/>
+        <!-- Australia -->
+        <path d="M800 330 L885 325 L905 370 L860 405 L805 385 L790 350 Z"/>
+      </g>
+      <!-- dotted flight arcs -->
+      <g stroke="currentColor" stroke-width="2.4" stroke-dasharray="3 8" stroke-linecap="round" fill="none" opacity="0.9">
+        <path d="M250 180 Q 420 70, 540 140"/>
+        <path d="M560 150 Q 700 230, 840 360"/>
+        <path d="M300 320 Q 460 320, 560 250"/>
+      </g>
+      <g fill="currentColor">
+        <circle cx="250" cy="180" r="5"/><circle cx="540" cy="140" r="5"/>
+        <circle cx="840" cy="360" r="5"/><circle cx="300" cy="320" r="5"/>
+      </g>
+    </svg>
+  </div>
   <img class="splash-icon" src="icon.png" alt="Trip Diary">
   <div class="splash-name"><span>Trip</span><span class="diary-word">D</span><span class="diary-script">iary</span></div>
   <div class="splash-tagline" data-i18n="tagline">Your journey, in your voice</div>
@@ -457,6 +511,10 @@
         <svg class="mic-icon" viewBox="0 0 24 24"><path d="M12 14a3 3 0 003-3V5a3 3 0 00-6 0v6a3 3 0 003 3zm5-3a5 5 0 01-10 0H5a7 7 0 006 6.92V21h2v-3.08A7 7 0 0019 11h-2z"/></svg>
       </button>
       <div class="record-label" id="recordLabel" data-i18n="tap_to_record">Tap to record</div>
+      <button class="write-btn" id="writeBtn" onclick="openManualEntry()">
+        <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>
+        <span data-i18n="write_entry">Write</span>
+      </button>
       <button class="cancel-rec-btn" id="cancelRecBtn" style="display:none" aria-label="Cancel recording">
         <svg viewBox="0 0 24 24" width="16" height="16"><path d="M6 6l12 12M18 6L6 18" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" fill="none"/></svg>
         <span data-i18n="cancel_rec">Cancel</span>
