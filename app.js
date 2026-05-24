@@ -292,6 +292,20 @@
   }
   function sw(s){ return (s||'').trim().split(/\s+/).filter(Boolean); }            // split to words
   const normW = w => w.toLowerCase().replace(/[.,!?;:'"\u05BE\u05F3\u05F4]/g,'');   // normalize for compare
+  // Android Chrome fires the SAME word as many separate "final" results with rising
+  // indices (confirmed on-device: "אחד אחד אחד אחד אחד אחד שתיים שתיים"). On this engine
+  // every word is its own final result, so any consecutive identical word is an
+  // artifact. Collapse runs of 2+ identical consecutive words to one. (Trade-off:
+  // a rare natural emphasis-double like "טוב טוב" loses one copy — far smaller harm
+  // than the duplication storm.)
+  function collapseRepeats(text){
+    const words = sw(text); const out = [];
+    for (const w of words){
+      if (out.length && normW(out[out.length-1]) === normW(w)) continue;
+      out.push(w);
+    }
+    return out.join(' ');
+  }
   function sessionText(){
     return Object.keys(sessionMap).map(Number).sort((a,b)=>a-b).map(k=>sessionMap[k]).join(' ').replace(/\s+/g,' ').trim();
   }
@@ -303,7 +317,7 @@
     return { tail: isPrefix ? cur.slice(last.length).join(' ') : cur.join(' '), isPrefix, curLen: cur.length, lastLen: last.length };
   }
   function liveFull(){
-    return (committedTranscript + ' ' + sessionTail().tail).replace(/\s+/g,' ').trim();
+    return collapseRepeats((committedTranscript + ' ' + sessionTail().tail).replace(/\s+/g,' ').trim());
   }
   let recordStartTime = 0, timerInterval = null;
   let sessionCategories = [];
