@@ -37,7 +37,6 @@
       radial-gradient(ellipse 70% 50% at 90% 25%, rgba(20,184,166,0.18) 0%, transparent 60%),
       radial-gradient(ellipse 80% 60% at 50% 100%, rgba(56,189,248,0.16) 0%, transparent 60%);
     background-attachment: fixed; min-height: 100vh; min-height: 100dvh;
-    padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
   }
   h1,h2,h3 { letter-spacing: -0.02em; }
   .mono { font-family: 'JetBrains Mono', monospace; font-feature-settings: "tnum" 1; }
@@ -66,12 +65,12 @@
       radial-gradient(ellipse 80% 60% at 50% 100%, rgba(56,189,248,0.18) 0%, transparent 60%);
     transition: opacity 0.6s ease, transform 0.6s ease; overflow: hidden; }
   .splash-map { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none;
-    color: var(--turquoise); opacity: 0.22; z-index: 0;
+    color: var(--turquoise); opacity: 0.38; z-index: 0;
     display: flex; align-items: center; justify-content: center;
     animation: splash-map-in 1.4s ease both; }
-  .splash-map svg { width: 130%; height: auto; max-height: 100%; }
-  body.dark .splash-map { opacity: 0.16; }
-  @keyframes splash-map-in { from { opacity: 0; transform: scale(1.08);} to { opacity: 0.22; transform: scale(1);} }
+  .splash-map svg { width: 185%; height: auto; max-height: 130%; }
+  body.dark .splash-map { opacity: 0.30; }
+  @keyframes splash-map-in { from { transform: scale(1.08);} to { transform: scale(1);} }
   .splash > .splash-icon, .splash > .splash-name, .splash > .splash-tagline { position: relative; z-index: 1; }
   .splash.hidden { opacity: 0; pointer-events: none; transform: scale(1.05); }
   .splash-icon { width: 150px; height: 150px; object-fit: contain;
@@ -96,22 +95,25 @@
   .logo-plane { position: absolute; top: -2px; inset-inline-start: 16%; width: 70%; height: 14px; pointer-events: none; color: var(--turquoise); }
   [dir="rtl"] .logo-plane { transform: scaleX(-1); }
 
-  #app { max-width: 520px; margin: 0 auto; min-height: 100dvh; display: flex; flex-direction: column; }
+  #app { max-width: 520px; margin: 0 auto; min-height: 100dvh; display: flex; flex-direction: column;
+    padding-left: env(safe-area-inset-left); padding-right: env(safe-area-inset-right);
+    padding-bottom: env(safe-area-inset-bottom); }
 
   /* HEADER */
-  header { padding: 16px 22px 12px; background: rgba(238,247,250,0.82); position: sticky; top: 0; z-index: 50;
+  header { padding: calc(16px + env(safe-area-inset-top)) 22px 12px; background: rgba(238,247,250,0.82); position: sticky; top: 0; z-index: 50;
     backdrop-filter: blur(20px) saturate(160%); -webkit-backdrop-filter: blur(20px) saturate(160%);
     border-bottom: 1px solid rgba(207,230,239,0.6); }
   .header-top { display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px; gap: 8px; }
-  .header-top .logo { flex-shrink: 1; min-width: 0; overflow: hidden; }
-  .header-actions { display: flex; gap: 5px; flex-shrink: 0; align-items: center; }
+  .header-top .logo { flex-shrink: 0; min-width: 0; overflow: visible; }
+  .header-actions { display: flex; gap: 5px; flex-shrink: 1; align-items: center; flex-wrap: wrap; justify-content: flex-end; }
   .icon-btn { background: rgba(255,255,255,0.7); border: 1px solid var(--line); border-radius: 100px;
     padding: 8px 11px; font-family: inherit; font-size: 12px; font-weight: 600; color: var(--ink-soft);
     cursor: pointer; transition: all 0.2s ease; backdrop-filter: blur(8px); white-space: nowrap; }
   .icon-btn:active { background: var(--ink); color: white; border-color: var(--ink); transform: scale(0.97); }
   .lang-btn { min-width: 40px; font-weight: 700; }
   #darkBtn, #backupBtn { padding: 8px 9px; font-size: 14px; }
-  .trip-line { display: flex; align-items: baseline; gap: 8px; flex-wrap: wrap; font-size: 13px; color: var(--muted); }
+  .trip-line { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; font-size: 13px; color: var(--muted); }
+  .trip-line .sos-btn { margin-inline-start: auto; }
   .trip-name { font-weight: 700; color: var(--ink-soft); font-size: 15px; }
   .trip-sep { color: var(--line-strong); }
 
@@ -465,7 +467,6 @@
         <span class="logo-trip">Trip</span><span class="logo-diary">D</span><span class="logo-script">iary</span>
       </div>
       <div class="header-actions">
-        <button class="icon-btn sos-btn" id="sosBtn"><span class="sos-dot"></span><span data-i18n="sos">SOS</span></button>
         <button class="icon-btn" id="darkBtn" title="dark mode">🌙</button>
         <button class="icon-btn" id="backupBtn" title="backup">💾</button>
         <button class="icon-btn" id="exportBtn" data-i18n="export">Export</button>
@@ -473,7 +474,7 @@
         <button class="icon-btn" id="tripsBtn" data-i18n="trips">Trips</button>
       </div>
     </div>
-    <div class="trip-line" id="tripLine"><span class="trip-name">—</span></div>
+    <div class="trip-line" id="tripLine"><span class="trip-name">—</span><button class="icon-btn sos-btn" id="sosBtn"><span class="sos-dot"></span><span data-i18n="sos">SOS</span></button></div>
     <div class="tabs">
       <button class="tab active" data-view="journal">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
