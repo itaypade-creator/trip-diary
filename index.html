@@ -131,9 +131,9 @@
   header { padding: calc(16px + env(safe-area-inset-top)) 22px 12px; background: rgba(238,247,250,0.82); position: sticky; top: 0; z-index: 50;
     backdrop-filter: blur(20px) saturate(160%); -webkit-backdrop-filter: blur(20px) saturate(160%);
     border-bottom: 1px solid rgba(207,230,239,0.6); }
-  .header-top { display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px; gap: 8px; }
+  .header-top { display: flex; flex-direction: column; align-items: stretch; margin-bottom: 8px; gap: 10px; }
   .header-top .logo { flex-shrink: 0; min-width: 0; overflow: visible; }
-  .header-actions { display: flex; gap: 5px; flex-shrink: 1; align-items: center; flex-wrap: wrap; justify-content: flex-end; }
+  .header-actions { display: flex; gap: 5px; flex-wrap: wrap; align-items: center; justify-content: flex-start; }
   .icon-btn { background: rgba(255,255,255,0.7); border: 1px solid var(--line); border-radius: 100px;
     padding: 8px 11px; font-family: inherit; font-size: 12px; font-weight: 600; color: var(--ink-soft);
     cursor: pointer; transition: all 0.2s ease; backdrop-filter: blur(8px); white-space: nowrap; }
@@ -141,7 +141,6 @@
   .lang-btn { min-width: 40px; font-weight: 700; }
   #darkBtn, #backupBtn { padding: 8px 9px; font-size: 14px; }
   .trip-line { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; font-size: 13px; color: var(--muted); }
-  .trip-line .sos-btn { margin-inline-start: auto; }
   .trip-name { font-weight: 700; color: var(--ink-soft); font-size: 15px; }
   .trip-sep { color: var(--line-strong); }
 
@@ -495,6 +494,7 @@
         <span class="logo-trip">Trip</span><span class="logo-diary">D</span><span class="logo-script">iary</span>
       </div>
       <div class="header-actions">
+        <button class="icon-btn sos-btn" id="sosBtn"><span class="sos-dot"></span><span data-i18n="sos">SOS</span></button>
         <button class="icon-btn" id="darkBtn" title="dark mode">🌙</button>
         <button class="icon-btn" id="backupBtn" title="backup">💾</button>
         <button class="icon-btn" id="exportBtn" data-i18n="export">Export</button>
@@ -502,7 +502,7 @@
         <button class="icon-btn" id="tripsBtn" data-i18n="trips">Trips</button>
       </div>
     </div>
-    <div class="trip-line" id="tripLine"><span class="trip-name">—</span><button class="icon-btn sos-btn" id="sosBtn"><span class="sos-dot"></span><span data-i18n="sos">SOS</span></button></div>
+    <div class="trip-line" id="tripLine"><span class="trip-name">—</span></div>
     <div class="tabs">
       <button class="tab active" data-view="journal">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
