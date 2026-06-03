@@ -1,0 +1,26 @@
+{
+  "expo": {
+    "name": "RiskMind",
+    "slug": "riskmind",
+    "version": "0.1.0",
+    "orientation": "portrait",
+    "scheme": "riskmind",
+    "userInterfaceStyle": "automatic",
+    "splash": {
+      "resizeMode": "contain",
+      "backgroundColor": "#FBF7F0"
+    },
+    "assetBundlePatterns": ["**/*"],
+    "ios": {
+      "supportsTablet": false
+    },
+    "android": {
+      "adaptiveIcon": {
+        "backgroundColor": "#FBF7F0"
+      }
+    },
+    "extra": {
+      "comment": "RTL / Hebrew-first app. See CLAUDE.md for product context. TODO: add icon.png + splash image once the RiskMind logo is built (CLAUDE.md section 12)."
+    }
+  }
+}

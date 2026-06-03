@@ -67,10 +67,11 @@
 
 ## 5. טכנולוגיה
 
-- **בנייה:** FlutterFlow (אני לא מתכנת — בונה הכל ב־FlutterFlow)
+- **בנייה:** React Native + Expo + TypeScript (עברנו מ־FlutterFlow ל־RN).
 - **Backend:** אין. הכל Offline.
 - **חישובים:** מקומיים, ללא רשת
 - **שפה ראשית:** עברית, RTL
+- **מבנה קוד:** ראה `src/README.md`
 
 -----
 
@@ -309,8 +310,8 @@ Launch → Splash Logo → Intro (פעם ראשונה בלבד) → Splash קצ�
 
 ### אני לא מתכנת
 
-- אני בונה ב־FlutterFlow לבד
-- כשאני שואל “איך לבנות X” — אני מתכוון לצעדים ב־FlutterFlow, לא לקוד
+- אני לא כותב קוד בעצמי — Claude כותב את הקוד (React Native + Expo + TypeScript)
+- כשאני שואל “איך לבנות X” — אני רוצה שתבנה את זה בקוד ותסביר לי בפשטות מה קורה
 - כשאני אומר **“Day X”** — אני רוצה ליווי באותו יום בלבד:
   - מה לבנות
   - איך לבנות
@@ -347,8 +348,10 @@ Launch → Splash Logo → Intro (פעם ראשונה בלבד) → Splash קצ�
 
 ## 13. קבצים בפרויקט
 
-- `riskmind-preview.html` — דמה אינטראקטיבי של האפליקציה (פלטה חמה כרגע). לצפייה בלבד, לא קוד שעובר ל־FlutterFlow.
-- `CLAUDE.md` — הקובץ הזה.
+- `CLAUDE.md` — הקובץ הזה (source of truth של המוצר).
+- `src/` — קוד האפליקציה (React Native + Expo + TypeScript). מבנה מלא ב־`src/README.md`.
+- `App.tsx` / `index.ts` — נקודת הכניסה של האפליקציה.
+- `package.json` / `app.json` / `tsconfig.json` / `babel.config.js` — קונפיגורציה.
 
 -----
 
